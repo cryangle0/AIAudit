@@ -2,7 +2,13 @@ import { useState } from 'react'
 import { Pencil, Trash2, Plus } from 'lucide-react'
 import { PLATFORMS, MOCK_SHOPS, platformsById } from '../../platforms/index.js'
 import Modal from '../Modal.jsx'
+import Select from '../Select.jsx'
 import ShopEditDialog from './ShopEditDialog.jsx'
+
+const FILTER_OPTIONS = [
+  { value: 'all', label: '全部' },
+  ...PLATFORMS.map(p => ({ value: p.id, label: p.name }))
+]
 
 export default function ShopsPanel({ settings, updateSettings }) {
   const [filter, setFilter] = useState('all')
@@ -65,16 +71,12 @@ export default function ShopsPanel({ settings, updateSettings }) {
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
         <span className="rec-settings-row-sub" style={{ marginTop: 0 }}>平台筛选</span>
-        <select
-          className="rec-settings-select"
+        <Select
           value={filter}
-          onChange={e => setFilter(e.target.value)}
-        >
-          <option value="all">全部</option>
-          {PLATFORMS.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+          options={FILTER_OPTIONS}
+          onChange={setFilter}
+          width={160}
+        />
         <div style={{ flex: 1 }}/>
         <button
           className="rec-modal-btn primary"

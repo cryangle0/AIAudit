@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Modal from '../Modal.jsx'
+import Select from '../Select.jsx'
 import { PLATFORMS } from '../../platforms/index.js'
 
 export default function ShopEditDialog({
@@ -51,17 +52,17 @@ export default function ShopEditDialog({
       <div className="rec-settings-row-item" style={{ borderBottom: 'none' }}>
         <div className="rec-settings-row-main">
           <div className="rec-settings-row-label">所属平台</div>
-          <select
-            className="rec-settings-select"
-            style={{ width: '100%', marginTop: 6 }}
-            value={platformId}
-            onChange={e => setPlatformId(e.target.value)}
-            disabled={mode === 'edit'}
-          >
-            {PLATFORMS.filter(p => enabledPlatformIds.includes(p.id)).map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+          <div style={{ marginTop: 6 }}>
+            <Select
+              value={platformId}
+              options={PLATFORMS
+                .filter(p => enabledPlatformIds.includes(p.id))
+                .map(p => ({ value: p.id, label: p.name }))}
+              onChange={setPlatformId}
+              disabled={mode === 'edit'}
+              width="100%"
+            />
+          </div>
           {mode === 'edit' && (
             <div className="rec-settings-row-sub">编辑模式下不可改变所属平台</div>
           )}

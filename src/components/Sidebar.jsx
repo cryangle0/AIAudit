@@ -1,8 +1,9 @@
-import { ChevronRight, ChevronDown, Moon, Sun, LogOut, Settings, Sparkles, Calendar, Check } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { ChevronRight, ChevronDown, Moon, Sun, LogOut, Settings, Sparkles, Calendar } from 'lucide-react'
+import { useState } from 'react'
 import { PLATFORMS, MOCK_SHOPS } from '../platforms/index.js'
 import logoImg from '../assets/logo.png'
 import Modal from './Modal.jsx'
+import Select from './Select.jsx'
 import SettingsModal from './SettingsModal.jsx'
 import './Sidebar.css'
 
@@ -14,26 +15,16 @@ function formatMonth(m) {
   return `${y}年${parseInt(mm, 10)}月`
 }
 
+const MONTH_SELECT_OPTIONS = MONTH_OPTIONS.map(m => ({ value: m, label: formatMonth(m) }))
+
 export default function Sidebar({
   platformId, shopId, month, darkMode,
   settings, updateSettings, resetSettings,
   onScopeChange, onToggleDark, onLogout
 }) {
   const [expanded, setExpanded] = useState(() => Object.fromEntries(PLATFORMS.map(p => [p.id, p.id === platformId])))
-  const [monthOpen, setMonthOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
-  const monthRef = useRef(null)
-
-  // click outside closes month dropdown
-  useEffect(() => {
-    if (!monthOpen) return
-    const onDown = e => {
-      if (monthRef.current && !monthRef.current.contains(e.target)) setMonthOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [monthOpen])
 
   return (
     <aside className="rec-sidebar">
@@ -75,41 +66,13 @@ export default function Sidebar({
 
       <div className="rec-sidebar-section">
         <label className="rec-month-label"><Calendar size={14}/> 月份</label>
-        <div className="rec-month-picker" ref={monthRef}>
-          <button
-            type="button"
-            className="rec-month-trigger"
-            onClick={() => setMonthOpen(o => !o)}
-            aria-haspopup="listbox"
-            aria-expanded={monthOpen}
-          >
-            <span>{formatMonth(month)}</span>
-            <ChevronDown size={14} className={`rec-month-chevron ${monthOpen ? 'open' : ''}`}/>
-          </button>
-          {monthOpen && (
-            <div className="rec-month-dropdown" role="listbox">
-              {MONTH_OPTIONS.map(m => {
-                const selected = m === month
-                return (
-                  <button
-                    key={m}
-                    type="button"
-                    role="option"
-                    aria-selected={selected}
-                    className={`rec-month-option ${selected ? 'selected' : ''}`}
-                    onClick={() => {
-                      onScopeChange({ platformId, shopId, month: m })
-                      setMonthOpen(false)
-                    }}
-                  >
-                    <span>{formatMonth(m)}</span>
-                    {selected && <Check size={14}/>}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        <Select
+          value={month}
+          options={MONTH_SELECT_OPTIONS}
+          onChange={m => onScopeChange({ platformId, shopId, month: m })}
+          placement="top"
+          width="100%"
+        />
       </div>
 
       <div className="rec-sidebar-footer">
