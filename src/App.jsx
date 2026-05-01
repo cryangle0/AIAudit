@@ -6,6 +6,7 @@ import TopBar from './components/TopBar.jsx'
 import ReconcileTab from './components/ReconcileTab.jsx'
 import SkuProfitTab from './components/SkuProfitTab.jsx'
 import { useReconcileStore } from './hooks/useReconcileStore.js'
+import { useSettings } from './hooks/useSettings.js'
 import { platformsById, MOCK_SHOPS } from './platforms/index.js'
 import { JST_SLOT } from './components/UploadZone.jsx'
 import { readWorkbook, validateColumns } from './utils/excel.js'
@@ -45,10 +46,32 @@ async function pickFromBook(book, slot, platform, dispatch, fileLabel) {
 
 export default function App() {
   const { state, dispatch, login, logout } = useReconcileStore()
+  const [settings, updateSettings, resetSettings] = useSettings()
 
   useEffect(() => {
     document.body.classList.toggle('dark', state.darkMode)
   }, [state.darkMode])
+
+  // 设置变化导致当前选中的平台/店铺不可用时，自动切换到合法值
+  useEffect(() => {
+    const enabled = settings.enabledPlatforms
+    if (enabled.length === 0) return // UI 层禁止全部取消，不会到这里
+
+    let nextPid = state.platformId
+    if (!enabled.includes(nextPid)) nextPid = enabled[0]
+
+    const allShops = [
+      ...(MOCK_SHOPS[nextPid] || []),
+      ...(settings.customShops[nextPid] || [])
+    ]
+    const ids = allShops.map(s => s.id)
+    let nextSid = state.shopId
+    if (!ids.includes(nextSid)) nextSid = allShops[0]?.id
+
+    if (nextPid !== state.platformId || nextSid !== state.shopId) {
+      dispatch({ type: 'SELECT_SCOPE', platformId: nextPid, shopId: nextSid, month: state.month })
+    }
+  }, [settings.enabledPlatforms, settings.customShops, state.platformId, state.shopId, state.month, dispatch])
 
   const platform = platformsById[state.platformId]
   const shops = MOCK_SHOPS[state.platformId] || []
@@ -129,6 +152,9 @@ export default function App() {
       <Sidebar
         platformId={state.platformId} shopId={state.shopId} month={state.month}
         darkMode={state.darkMode}
+        settings={settings}
+        updateSettings={updateSettings}
+        resetSettings={resetSettings}
         onScopeChange={onScopeChange}
         onToggleDark={() => dispatch({ type: 'TOGGLE_DARK' })}
         onLogout={logout}/>
