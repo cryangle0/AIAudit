@@ -1,0 +1,59 @@
+.rec-sidebar {
+  width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex; flex-direction: column;
+  padding: 16px 12px;
+  gap: 18px;
+  flex-shrink: 0;
+}
+.rec-sidebar-brand {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 600; font-size: var(--font-size-lg);
+  padding: 4px 8px; color: var(--text-primary);
+}
+.rec-brand-emoji { font-size: 22px; }
+.rec-sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; }
+.rec-platform-row {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; padding: 7px 8px;
+  background: transparent; border: none; cursor: pointer;
+  font-size: var(--font-size-base); color: var(--text-primary);
+  border-radius: 6px;
+}
+.rec-platform-row:hover { background: var(--bg-hover); }
+.rec-platform-name { flex: 1; text-align: left; }
+.rec-tag {
+  font-size: var(--font-size-xs); padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex; align-items: center; gap: 2px;
+}
+.rec-tag-real { background: var(--accent-soft); color: var(--accent); }
+.rec-tag-demo { background: rgba(241, 178, 56, 0.18); color: #c98412; }
+.rec-shop-row {
+  display: block; width: 100%; text-align: left;
+  padding: 5px 8px 5px 28px;
+  background: transparent; border: none; cursor: pointer;
+  font-size: var(--font-size-sm); color: var(--text-secondary);
+  border-radius: 6px;
+}
+.rec-shop-row:hover { background: var(--bg-hover); }
+.rec-shop-row.active { background: var(--accent-soft); color: var(--accent); }
+.rec-sidebar-section { display: flex; flex-direction: column; gap: 6px; padding: 0 8px; }
+.rec-month-label { font-size: var(--font-size-sm); color: var(--text-secondary); }
+.rec-month-select {
+  padding: 6px 8px; border: 1px solid var(--border-color);
+  border-radius: 6px; background: var(--bg-card); color: var(--text-primary);
+  font-size: var(--font-size-sm);
+}
+.rec-sidebar-footer {
+  display: flex; gap: 6px; padding: 8px;
+  border-top: 1px solid var(--border-color);
+}
+.rec-sidebar-footer button {
+  flex: 1; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--border-color);
+  border-radius: 6px; cursor: pointer; color: var(--icon-default);
+}
+.rec-sidebar-footer button:hover { background: var(--bg-hover); }
