@@ -1,0 +1,20 @@
+.rec-monthly { background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 12px; overflow: hidden; }
+.rec-monthly-head {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 12px 16px; background: transparent; border: none; cursor: pointer;
+  font-size: var(--font-size-base); color: var(--text-primary);
+}
+.rec-monthly-head:hover { background: var(--bg-hover); }
+.rec-monthly-meta { color: var(--text-muted); font-size: var(--font-size-sm); margin-left: 8px; }
+.rec-monthly-total { margin-left: auto; color: #d23a3a; font-weight: 500; }
+.rec-monthly-body { padding: 4px 16px 12px; }
+.rec-monthly-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 8px 0; border-top: 1px solid var(--border-color);
+  font-size: var(--font-size-sm);
+}
+.rec-monthly-scene { flex: 1; }
+.rec-monthly-count { color: var(--text-muted); }
+.rec-monthly-amount { min-width: 100px; text-align: right; }
+.rec-monthly-amount.neg { color: #d23a3a; }

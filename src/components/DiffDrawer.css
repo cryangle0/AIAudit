@@ -1,0 +1,46 @@
+.rec-drawer-mask {
+  position: fixed; inset: 0; background: rgba(15, 17, 22, 0.4);
+  display: flex; justify-content: flex-end; z-index: 100;
+}
+.rec-drawer {
+  width: 720px; max-width: 90vw; height: 100%;
+  background: var(--bg-card); padding: 20px; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.rec-drawer header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.rec-drawer header button { background: transparent; border: none; cursor: pointer; color: var(--icon-default); }
+.rec-drawer h3 { font-size: 16px; }
+.rec-drawer h4 { font-size: 13px; margin: 18px 0 8px; color: var(--text-secondary); }
+.rec-drawer-hint {
+  background: var(--accent-soft); color: var(--text-primary);
+  padding: 10px 14px; border-radius: 8px; margin-bottom: 12px;
+  font-size: var(--font-size-sm);
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.rec-drawer-hint-tag {
+  background: var(--accent); color: white;
+  padding: 2px 8px; border-radius: 4px; font-size: var(--font-size-xs);
+  flex-shrink: 0;
+}
+.rec-drawer-summary {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px;
+  background: var(--bg-hover); border-radius: 8px; padding: 12px 14px;
+  margin-bottom: 6px;
+}
+.rec-drawer-summary > div {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: var(--font-size-sm);
+}
+.rec-drawer-summary span { color: var(--text-muted); }
+.rec-drawer-summary strong { font-weight: 500; }
+.rec-drawer-summary .neg { color: #d23a3a; }
+.rec-drawer-summary .pos { color: #2f9d68; }
+.rec-mini { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.rec-mini th, .rec-mini td { padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: left; }
+.rec-mini th { color: var(--text-muted); font-weight: 500; }
+.rec-jst-raw {
+  background: var(--bg-hover); padding: 10px; border-radius: 6px;
+  font-size: 11px; max-height: 360px; overflow: auto;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.rec-drawer-empty { color: var(--text-muted); padding: 8px 0; font-size: var(--font-size-sm); }

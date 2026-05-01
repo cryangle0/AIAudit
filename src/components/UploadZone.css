@@ -1,0 +1,56 @@
+.rec-upload-zone {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 12px; padding: 18px; box-shadow: var(--shadow-sm);
+}
+.rec-upload-header {
+  display: flex; align-items: center; gap: 8px;
+  font-size: var(--font-size-md); font-weight: 500;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.rec-upload-tip {
+  font-size: var(--font-size-xs); color: var(--text-muted);
+  font-weight: 400;
+}
+.rec-upload-tip code {
+  background: var(--bg-hover); padding: 1px 6px; border-radius: 4px;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.rec-upload-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.rec-slot {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px dashed var(--border-strong); border-radius: 10px;
+  padding: 14px; min-height: 72px;
+  transition: all 0.15s;
+}
+.rec-slot.filled { border-style: solid; background: var(--bg-hover); }
+.rec-slot-cta {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 0; background: transparent; border: none; cursor: pointer;
+  text-align: left; color: var(--text-primary);
+}
+.rec-slot-cta:hover { color: var(--accent); }
+.rec-slot-info { flex: 1; min-width: 0; }
+.rec-slot-label { font-size: var(--font-size-base); font-weight: 500; }
+.rec-slot-label .req { color: var(--accent); margin-left: 4px; }
+.rec-slot-meta { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-slot-clear {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-muted); padding: 4px;
+}
+.rec-slot-clear:hover { color: var(--accent); }
+.rec-upload-actions {
+  display: flex; align-items: center; gap: 12px; margin-top: 16px;
+}
+.rec-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 8px 18px; border-radius: 6px; cursor: pointer;
+  font-size: var(--font-size-base); font-weight: 500;
+}
+.rec-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.rec-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.rec-upload-hint { font-size: var(--font-size-sm); color: var(--text-muted); }

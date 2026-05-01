@@ -1,0 +1,45 @@
+.rec-difftable {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 12px; box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.rec-difftable-toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color); flex-wrap: wrap;
+}
+.rec-pill {
+  padding: 5px 12px; border-radius: 999px;
+  background: var(--bg-hover); color: var(--text-secondary);
+  border: 1px solid transparent; cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+.rec-pill.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.rec-search {
+  padding: 6px 10px; border: 1px solid var(--border-color);
+  border-radius: 6px; background: var(--bg-secondary);
+  font-size: var(--font-size-sm); width: 220px;
+  color: var(--text-primary);
+}
+.rec-count { margin-left: auto; font-size: var(--font-size-sm); color: var(--text-muted); }
+.rec-difftable-scroll { max-height: 540px; overflow: auto; }
+.rec-difftable table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.rec-difftable th, .rec-difftable td {
+  padding: 8px 10px; text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+.rec-difftable th { background: var(--bg-secondary); color: var(--text-muted); font-weight: 500;
+  position: sticky; top: 0; }
+.rec-difftable tbody tr { cursor: pointer; }
+.rec-difftable tbody tr:hover { background: var(--bg-hover); }
+.rec-difftable .mono { font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+.rec-difftable .neg { color: #d23a3a; }
+.badge {
+  padding: 2px 8px; border-radius: 4px; font-size: var(--font-size-xs);
+}
+.badge.bk-matched { background: rgba(58, 175, 107, 0.14); color: #2f9d68; }
+.badge.bk-duplicated { background: rgba(241, 178, 56, 0.18); color: #c98412; }
+.badge.bk-missing_in_jst, .badge.bk-missing_in_platform {
+  background: rgba(114, 132, 161, 0.18); color: #62718a;
+}
+.badge.bk-profit_anomaly { background: rgba(210, 58, 58, 0.14); color: #d23a3a; }
+.rec-empty { padding: 40px; text-align: center; color: var(--text-muted); }
