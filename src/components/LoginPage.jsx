@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import logoImg from '../assets/logo.png'
 import './LoginPage.css'
 
 function VisionRings() {
@@ -28,7 +29,7 @@ export default function LoginPage({ onLogin }) {
         <div className="lp-left-inner">
           <div className="lp-brand">
             <div className="lp-brand-logo">
-              <img src="/src/assets/logo.png" alt="爱对" />
+              <img src={logoImg} alt="爱对" />
             </div>
             <div className="lp-brand-info">
               <div className="lp-brand-name">爱对</div>

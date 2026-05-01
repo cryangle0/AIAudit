@@ -1,6 +1,7 @@
 import { ChevronRight, ChevronDown, Moon, Sun, LogOut, Settings, Sparkles, Calendar } from 'lucide-react'
 import { useState } from 'react'
 import { PLATFORMS, MOCK_SHOPS } from '../platforms/index.js'
+import logoImg from '../assets/logo.png'
 import './Sidebar.css'
 
 const MONTH_OPTIONS = ['2025-12', '2026-01', '2026-02', '2026-03']
@@ -14,7 +15,7 @@ export default function Sidebar({
   return (
     <aside className="rec-sidebar">
       <div className="rec-sidebar-brand">
-        <img src="/src/assets/logo.png" alt="爱对" className="rec-brand-logo" />
+        <img src={logoImg} alt="爱对" className="rec-brand-logo" />
         <span>爱对</span>
       </div>
 
