@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { PLATFORMS, MOCK_SHOPS } from '../platforms/index.js'
 import logoImg from '../assets/logo.png'
 import Modal from './Modal.jsx'
+import SettingsModal from './SettingsModal.jsx'
 import './Sidebar.css'
 
 const MONTH_OPTIONS = ['2025-12', '2026-01', '2026-02', '2026-03']
@@ -15,6 +16,7 @@ function formatMonth(m) {
 
 export default function Sidebar({
   platformId, shopId, month, darkMode,
+  settings, updateSettings, resetSettings,
   onScopeChange, onToggleDark, onLogout
 }) {
   const [expanded, setExpanded] = useState(() => Object.fromEntries(PLATFORMS.map(p => [p.id, p.id === platformId])))
@@ -115,36 +117,13 @@ export default function Sidebar({
         <button onClick={() => setConfirmLogout(true)} title="退出"><LogOut size={16}/></button>
       </div>
 
-      <Modal
+      <SettingsModal
         open={settingsOpen}
-        title="设置"
         onClose={() => setSettingsOpen(false)}
-        footer={
-          <button className="rec-modal-btn" onClick={() => setSettingsOpen(false)}>关闭</button>
-        }
-      >
-        <div className="rec-settings-row">
-          <div>
-            <div className="rec-settings-label">主题</div>
-            <div className="rec-settings-sub">切换暗色 / 亮色界面</div>
-          </div>
-          <button className="rec-modal-btn" onClick={onToggleDark}>
-            {darkMode ? '切换到亮色' : '切换到暗色'}
-          </button>
-        </div>
-        <div className="rec-settings-row">
-          <div>
-            <div className="rec-settings-label">关于"爱对"</div>
-            <div className="rec-settings-sub">多平台电商利润对账原型 · v0.0.0</div>
-          </div>
-        </div>
-        <div className="rec-settings-row">
-          <div>
-            <div className="rec-settings-label">更多设置</div>
-            <div className="rec-settings-sub">账号、AI 助手偏好、对账规则等正在开发中</div>
-          </div>
-        </div>
-      </Modal>
+        settings={settings}
+        updateSettings={updateSettings}
+        resetSettings={resetSettings}
+      />
 
       <Modal
         open={confirmLogout}
