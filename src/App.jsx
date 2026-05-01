@@ -74,7 +74,9 @@ export default function App() {
   const onLoadSample = useCallback(async () => {
     if (!platform.sampleFileUrl) return
     try {
-      const resp = await fetch(platform.sampleFileUrl)
+      // 拼接 base URL 适配子路径部署（如 GitHub Pages /AIAudit/）
+      const url = import.meta.env.BASE_URL + platform.sampleFileUrl.replace(/^\//, '')
+      const resp = await fetch(url)
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const blob = await resp.blob()
       const file = new File([blob], `${platform.id}.xlsx`, { type: blob.type })
