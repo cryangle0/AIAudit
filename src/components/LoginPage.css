@@ -1,0 +1,554 @@
+.lp-root {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: var(--font-sans);
+}
+
+/* ── Left brand panel ── */
+.lp-left {
+  flex: 1;
+  min-width: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 100%, rgba(239,93,78,0.11) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 85% 0%,   rgba(239,93,78,0.06) 0%, transparent 60%),
+    linear-gradient(160deg, #111318 0%, #0d0f15 60%, #0b0d13 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 40px 52px 0;
+}
+
+/* 极细点阵叠加，制造噪点质感 */
+.lp-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 右侧分割线 */
+.lp-left::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(239,93,78,0.1) 20%,
+    rgba(239,93,78,0.22) 50%,
+    rgba(239,93,78,0.1) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Vision Rings ── */
+.lp-rings-scene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  perspective: 900px;
+  overflow: hidden;
+}
+
+.lp-ring {
+  position: absolute;
+  top: 52%;
+  left: 46%;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  border: 1px solid transparent;
+}
+
+/* Ring 1 — large, tilted, brand color, slow */
+.lp-ring-1 {
+  width: 680px;
+  height: 680px;
+  margin-top: -340px;
+  margin-left: -340px;
+  border-color: rgba(239, 93, 78, 0.22);
+  box-shadow: 0 0 0 0.5px rgba(239, 93, 78, 0.08) inset,
+              0 0 40px 0 rgba(239, 93, 78, 0.04);
+  transform: rotateX(72deg) rotateZ(15deg);
+  animation: ringRotate1 28s linear infinite;
+}
+
+/* Ring 2 — medium, opposite tilt, subtler */
+.lp-ring-2 {
+  width: 480px;
+  height: 480px;
+  margin-top: -240px;
+  margin-left: -240px;
+  border-color: rgba(239, 93, 78, 0.15);
+  border-width: 1px;
+  box-shadow: 0 0 0 0.5px rgba(239, 93, 78, 0.05) inset;
+  transform: rotateX(58deg) rotateZ(-30deg);
+  animation: ringRotate2 22s linear infinite;
+}
+
+/* Ring 3 — small, steeper tilt, accent glow */
+.lp-ring-3 {
+  width: 320px;
+  height: 320px;
+  margin-top: -160px;
+  margin-left: -160px;
+  border-color: rgba(239, 93, 78, 0.28);
+  border-width: 1px;
+  box-shadow: 0 0 20px 2px rgba(239, 93, 78, 0.06),
+              0 0 0 0.5px rgba(239, 93, 78, 0.1) inset;
+  transform: rotateX(64deg) rotateZ(55deg);
+  animation: ringRotate3 18s linear infinite reverse;
+}
+
+/* Ring 4 — extra large, very faint, slow drift */
+.lp-ring-4 {
+  width: 860px;
+  height: 860px;
+  margin-top: -430px;
+  margin-left: -430px;
+  border-color: rgba(239, 93, 78, 0.07);
+  border-width: 1px;
+  transform: rotateX(80deg) rotateZ(-10deg);
+  animation: ringRotate4 40s linear infinite;
+}
+
+@keyframes ringRotate1 {
+  from { transform: rotateX(72deg) rotateZ(15deg); }
+  to   { transform: rotateX(72deg) rotateZ(375deg); }
+}
+@keyframes ringRotate2 {
+  from { transform: rotateX(58deg) rotateZ(-30deg); }
+  to   { transform: rotateX(58deg) rotateZ(330deg); }
+}
+@keyframes ringRotate3 {
+  from { transform: rotateX(64deg) rotateZ(55deg); }
+  to   { transform: rotateX(64deg) rotateZ(-305deg); }
+}
+@keyframes ringRotate4 {
+  from { transform: rotateX(80deg) rotateZ(-10deg); }
+  to   { transform: rotateX(80deg) rotateZ(350deg); }
+}
+
+/* ── Flow canvas (keep for fallback ref, hidden now) ── */
+.lp-flow-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lp-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.lp-glow-bottom {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(239,93,78,0.13) 0%, transparent 65%);
+  bottom: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: glowPulse 4s ease-in-out infinite;
+}
+.lp-glow-top {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(239,93,78,0.06) 0%, transparent 65%);
+  top: -80px;
+  right: -40px;
+  animation: glowPulse 6s ease-in-out infinite reverse;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+  50%       { opacity: 1;   transform: translateX(-50%) scale(1.1); }
+}
+
+.lp-left-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 0 48px;
+}
+
+.lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lp-main-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 20px;
+  background: none;
+  border: none;
+}
+
+.lp-brand-logo img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 11px;
+}
+
+.lp-brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: -0.01em;
+}
+
+.lp-brand-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.42);
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+.lp-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(239,93,78,0.35);
+  background: rgba(239,93,78,0.1);
+  color: rgba(239,93,78,0.9);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  margin-bottom: 20px;
+}
+
+.lp-headline {
+  font-size: 52px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  margin-bottom: 20px;
+}
+
+.lp-headline em {
+  font-style: normal;
+  background: linear-gradient(90deg, #ff7a66, #ef5d4e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lp-desc {
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.42);
+  line-height: 1.8;
+  max-width: 380px;
+}
+
+.lp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lp-tags span {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.lp-tags span:hover {
+  background: rgba(239,93,78,0.1);
+  border-color: rgba(239,93,78,0.28);
+  color: rgba(239,93,78,0.85);
+}
+
+/* ── Right login panel ── */
+.lp-right {
+  width: 480px;
+  flex-shrink: 0;
+  background: var(--bg-secondary, #fcfcfd);
+  border-left: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  flex-direction: column;
+  padding: 0 56px;
+  justify-content: center;
+  position: relative;
+}
+
+body.dark .lp-right {
+  background: #0f1115;
+}
+
+.lp-form-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.lp-form-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary, #13151a);
+  letter-spacing: -0.025em;
+  margin-bottom: 6px;
+}
+
+.lp-form-sub {
+  font-size: 13px;
+  color: var(--text-muted, #8e97a8);
+  margin-bottom: 36px;
+  line-height: 1.6;
+}
+
+.lp-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lp-field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #555d6c);
+  letter-spacing: 0.01em;
+}
+
+.lp-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border-color, rgba(16,18,24,0.09));
+  border-radius: 10px;
+  padding: 0 14px;
+  background: var(--bg-elevated, rgba(255,255,255,0.86));
+  backdrop-filter: blur(12px);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lp-input-wrap:focus-within {
+  border-color: rgba(239,93,78,0.4);
+  box-shadow: 0 0 0 3px rgba(239,93,78,0.1);
+}
+
+.lp-input-wrap svg {
+  color: var(--text-muted, #8e97a8);
+  flex-shrink: 0;
+}
+
+.lp-input-wrap input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13.5px;
+  color: var(--text-primary, #13151a);
+  padding: 12px 0;
+  font-family: var(--font-sans);
+}
+
+.lp-input-wrap input::placeholder {
+  color: var(--text-muted, #8e97a8);
+  opacity: 0.7;
+}
+
+.lp-code-btn {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--accent, #ef5d4e);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  border-left: 1px solid var(--border-color);
+  padding-left: 12px;
+  margin-left: 2px;
+}
+
+.lp-code-btn:hover {
+  opacity: 0.72;
+}
+
+.lp-submit {
+  width: 100%;
+  padding: 13px 0;
+  border-radius: 10px;
+  border: none;
+  background: var(--bg-active);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: not-allowed;
+  font-family: var(--font-sans);
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  margin-top: 4px;
+  letter-spacing: 0.01em;
+}
+
+.lp-submit.lp-submit-active {
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.lp-submit.lp-submit-active:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 6px 20px var(--accent-glow);
+}
+
+.lp-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted, #8e97a8);
+  font-size: 11px;
+  margin: 4px 0;
+}
+
+.lp-divider::before,
+.lp-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color, rgba(16,18,24,0.09));
+}
+
+.lp-dingtalk-btn {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, rgba(16,18,24,0.09));
+  background: var(--bg-elevated);
+  color: var(--text-secondary, #555d6c);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+body.dark .lp-dingtalk-btn {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+.lp-dingtalk-btn:hover {
+  border-color: rgba(239,93,78,0.35);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.lp-dingtalk-btn svg {
+  color: var(--accent, #ef5d4e);
+}
+
+/* DingTalk QR mode */
+.lp-qr-box {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0 18px;
+}
+
+.lp-qr-inner {
+  width: 180px;
+  height: 180px;
+  border: 1px solid var(--border-color, rgba(16,18,24,0.09));
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.lp-qr-loading {
+  font-size: 12px;
+  color: var(--text-muted, #8e97a8);
+}
+
+.lp-back-btn {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, rgba(16,18,24,0.09));
+  background: var(--bg-elevated);
+  color: var(--text-secondary, #555d6c);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+body.dark .lp-back-btn {
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+.lp-back-btn:hover {
+  border-color: rgba(239,93,78,0.35);
+  color: var(--accent, #ef5d4e);
+  background: var(--accent-soft);
+}
+
+.lp-footer {
+  font-size: 11px;
+  color: var(--text-muted, #8e97a8);
+  opacity: 0.45;
+  text-align: center;
+  padding: 24px 0 28px;
+}
