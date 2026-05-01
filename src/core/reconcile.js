@@ -1,4 +1,5 @@
 import { isAmountEqual, isProfitAnomaly } from './profit.js'
+import { generateHint } from './aiHint.js'
 
 function classify(p, j) {
   if (p && !j) return 'missing_in_jst'
@@ -53,7 +54,8 @@ function buildDiffRow(orderId, p, j) {
     systemProfit,
     profitDiff: diff,
     bucket,
-    aiHint: null,
+    aiHint: generateHint({ bucket, saleRevenue, profitDiff: diff,
+      jstBillAmountSum: j?.jstBillAmountSum ?? 0 }),
     jstBillAmountSum: j?.jstBillAmountSum ?? 0,
     platformFlows: p?.flows ?? [],
     jstRows: j?.rows ?? []
