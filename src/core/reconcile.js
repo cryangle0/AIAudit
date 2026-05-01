@@ -38,8 +38,10 @@ function buildDiffRow(orderId, p, j) {
   const diff = realProfit - systemProfit
 
   // upgrade matched/duplicated → profit_anomaly if applicable
+  // 退款单 (refundedAmount > 0) 不参与异常判定 —— 退款本身就是负毛利不算异常
   if ((bucket === 'matched' || bucket === 'duplicated') &&
-      p && j && isProfitAnomaly(diff, systemProfit)) {
+      p && j && (j.refundedAmount || 0) === 0 &&
+      isProfitAnomaly(diff, systemProfit)) {
     bucket = 'profit_anomaly'
   }
 

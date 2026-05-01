@@ -18,9 +18,12 @@ describe('profit core', () => {
   })
 
   it('profit anomaly: above absolute threshold AND above percent threshold', () => {
-    expect(isProfitAnomaly(20, 100)).toBe(true)
-    expect(isProfitAnomaly(2, 100)).toBe(false)
-    expect(isProfitAnomaly(20, 10000)).toBe(false)
+    // diff=40, system=100 → 40% > 30%, 40 > 20 → anomaly
+    expect(isProfitAnomaly(40, 100)).toBe(true)
+    // diff=10, system=100 → below abs threshold (20)
+    expect(isProfitAnomaly(10, 100)).toBe(false)
+    // diff=40, system=10000 → 0.4% < 30%, but 40 > 20 → still need both, false
+    expect(isProfitAnomaly(40, 10000)).toBe(false)
   })
 
   it('constants are sane', () => {
