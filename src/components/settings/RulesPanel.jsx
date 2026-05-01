@@ -1,7 +1,9 @@
+import Select from '../Select.jsx'
+
 const STRATEGIES = [
-  { id: 'orderId', label: '订单号优先（推荐）' },
-  { id: 'skuTime', label: 'SKU + 时间窗' },
-  { id: 'auto',    label: '自动选择' }
+  { value: 'orderId', label: '订单号优先（推荐）' },
+  { value: 'skuTime', label: 'SKU + 时间窗' },
+  { value: 'auto',    label: '自动选择' }
 ]
 
 export default function RulesPanel({ settings, updateSettings }) {
@@ -123,18 +125,13 @@ export default function RulesPanel({ settings, updateSettings }) {
         匹配策略
       </h4>
 
-      <div className="rec-settings-radio-group" style={{ paddingLeft: 4 }}>
-        {STRATEGIES.map(s => (
-          <label key={s.id} className="rec-settings-radio">
-            <input
-              type="radio"
-              name="match-strategy"
-              checked={r.matchStrategy === s.id}
-              onChange={() => set({ matchStrategy: s.id })}
-            />
-            {s.label}
-          </label>
-        ))}
+      <div style={{ maxWidth: 240 }}>
+        <Select
+          value={r.matchStrategy}
+          options={STRATEGIES}
+          onChange={v => set({ matchStrategy: v })}
+          width="100%"
+        />
       </div>
     </div>
   )

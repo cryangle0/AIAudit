@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
+import Select from '../Select.jsx'
 
 const SOURCE_OPTIONS = [
-  { id: 'jushuitan', label: '聚水潭' },
-  { id: 'kingdee',   label: '金蝶' },
-  { id: 'manual',    label: '手动 xlsx' }
+  { value: 'jushuitan', label: '聚水潭' },
+  { value: 'kingdee',   label: '金蝶' },
+  { value: 'manual',    label: '手动 xlsx' }
 ]
 
 export default function DataSourcePanel({ settings, updateSettings }) {
@@ -59,18 +60,13 @@ export default function DataSourcePanel({ settings, updateSettings }) {
       <div className="rec-settings-row-item">
         <div className="rec-settings-row-main">
           <div className="rec-settings-row-label">主数据源</div>
-          <div className="rec-settings-radio-group" style={{ marginTop: 8, flexDirection: 'row', gap: 16 }}>
-            {SOURCE_OPTIONS.map(o => (
-              <label key={o.id} className="rec-settings-radio">
-                <input
-                  type="radio"
-                  name="ds-primary"
-                  checked={ds.primary === o.id}
-                  onChange={() => setPrimary(o.id)}
-                />
-                {o.label}
-              </label>
-            ))}
+          <div style={{ marginTop: 8, maxWidth: 240 }}>
+            <Select
+              value={ds.primary}
+              options={SOURCE_OPTIONS}
+              onChange={setPrimary}
+              width="100%"
+            />
           </div>
         </div>
       </div>
