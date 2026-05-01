@@ -43,10 +43,13 @@ export default function Sidebar({
       </div>
 
       <nav className="rec-sidebar-nav">
-        {PLATFORMS.map(p => {
+        {PLATFORMS.filter(p => settings.enabledPlatforms.includes(p.id)).map(p => {
           const open = expanded[p.id]
           const isDemo = p.status === 'demo'
-          const shops = MOCK_SHOPS[p.id] || []
+          const shops = [
+            ...(MOCK_SHOPS[p.id] || []),
+            ...(settings.customShops?.[p.id] || [])
+          ]
           return (
             <div key={p.id} className="rec-platform">
               <button
