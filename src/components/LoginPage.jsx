@@ -27,9 +27,11 @@ export default function LoginPage({ onLogin }) {
 
         <div className="lp-left-inner">
           <div className="lp-brand">
-            <div className="lp-brand-logo"><span>📊</span></div>
+            <div className="lp-brand-logo">
+              <img src="/src/assets/logo.png" alt="爱对" />
+            </div>
             <div className="lp-brand-info">
-              <div className="lp-brand-name">AI对账</div>
+              <div className="lp-brand-name">爱对</div>
               <div className="lp-brand-sub">多平台店铺销售/利润智能核对</div>
             </div>
           </div>
@@ -58,7 +60,7 @@ export default function LoginPage({ onLogin }) {
         <div className="lp-form-wrap">
           {mode === 'sms' && (
             <>
-              <h2 className="lp-form-title">欢迎登录 AI对账</h2>
+              <h2 className="lp-form-title">欢迎登录 爱对</h2>
               <p className="lp-form-sub">手机号验证码登录，开启多平台对账之旅。</p>
 
               <div className="lp-fields">

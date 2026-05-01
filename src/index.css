@@ -21,10 +21,10 @@
   --icon-default: #1f232b;
   --icon-muted: #616a79;
   --icon-strong: #111318;
-  --accent: #ef5d4e;
-  --accent-hover: #dc4f40;
-  --accent-soft: rgba(239, 93, 78, 0.12);
-  --accent-glow: rgba(239, 93, 78, 0.24);
+  --accent: rgb(2, 169, 196);
+  --accent-hover: rgb(2, 152, 176);
+  --accent-soft: rgba(2, 169, 196, 0.12);
+  --accent-glow: rgba(2, 169, 196, 0.24);
   --shadow-sm: 0 8px 20px rgba(17, 20, 28, 0.06);
   --shadow-md: 0 20px 42px rgba(17, 20, 28, 0.11);
   --shadow-lg: 0 32px 66px rgba(17, 20, 28, 0.16);
@@ -48,7 +48,7 @@ body {
   line-height: var(--line-height-base);
   letter-spacing: -0.01em;
   background:
-    radial-gradient(1000px 460px at 78% 110%, rgba(239, 93, 78, 0.08), transparent 62%),
+    radial-gradient(1000px 460px at 78% 110%, rgba(2, 169, 196, 0.08), transparent 62%),
     radial-gradient(840px 320px at 4% -10%, rgba(17, 20, 28, 0.04), transparent 58%),
     var(--bg-primary);
   color: var(--text-primary);
@@ -80,8 +80,8 @@ body.dark {
   --icon-default: #d8deea;
   --icon-muted: #a3aec2;
   --icon-strong: #f7f9ff;
-  --accent-soft: rgba(239, 93, 78, 0.2);
-  --accent-glow: rgba(239, 93, 78, 0.32);
+  --accent-soft: rgba(2, 169, 196, 0.2);
+  --accent-glow: rgba(2, 169, 196, 0.32);
   --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.34);
   --shadow-md: 0 26px 56px rgba(0, 0, 0, 0.46);
   --shadow-lg: 0 40px 80px rgba(0, 0, 0, 0.56);

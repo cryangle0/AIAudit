@@ -10,9 +10,20 @@ function num(v) {
   return Number.isFinite(n) ? n : 0
 }
 
+function findBillAmountKey(row) {
+  // 自适应：取第一个以「资金账单金额」结尾的列
+  // 兼容 抖音/淘宝/快手/拼多多/小红书/视频号/微信小店
+  for (const k of Object.keys(row)) {
+    if (typeof k === 'string' && k.endsWith('资金账单金额')) return k
+  }
+  return null
+}
+
 export function parseJushuitan(rows = []) {
   const map = new Map()
+  let billKey = null
   for (const r of rows) {
+    if (!billKey) billKey = findBillAmountKey(r)
     const oid = stripQuote(r['原始线上订单号'])
     if (oid == null || oid === '') continue
     if (!map.has(oid)) {
@@ -31,7 +42,7 @@ export function parseJushuitan(rows = []) {
     o.shippedCost += num(r['实发成本'])
     o.grossProfit += num(r['销售毛利'])
     o.refundedAmount += num(r['当期实退金额'])
-    o.jstBillAmountSum += num(r['抖音资金账单金额'])
+    o.jstBillAmountSum += billKey ? num(r[billKey]) : 0
     o.qty += num(r['件数'])
     o.amount += num(r['金额'])
     o.rowCount += 1

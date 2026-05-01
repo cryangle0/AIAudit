@@ -8,6 +8,16 @@
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
+.rec-load-sample {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 12px;
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px; cursor: pointer;
+  font-size: var(--font-size-sm); font-weight: 500;
+}
+.rec-load-sample:hover { background: var(--accent); color: white; }
 .rec-upload-tip {
   font-size: var(--font-size-xs); color: var(--text-muted);
   font-weight: 400;

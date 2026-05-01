@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Upload, CheckCircle2, X, FileSpreadsheet } from 'lucide-react'
+import { Upload, CheckCircle2, X, FileSpreadsheet, Sparkles } from 'lucide-react'
 import './UploadZone.css'
 
 export const JST_SLOT = {
@@ -39,14 +39,18 @@ function Slot({ slot, value, onPick, onClear }) {
   )
 }
 
-export default function UploadZone({ platform, uploads, onPick, onClear, onStart, canStart, reconciling }) {
+export default function UploadZone({ platform, uploads, onPick, onClear, onStart, canStart, reconciling, onLoadSample }) {
   const slots = [...platform.uploadSlots, JST_SLOT]
   return (
     <div className="rec-upload-zone">
       <div className="rec-upload-header">
         <FileSpreadsheet size={18}/>
         <span>上传 {platform.name} 对账文件</span>
-        <span className="rec-upload-tip">提示：可直接拖入示例文件 <code>抖音店铺对账数据.xlsx</code>，三个槽位会自动填充</span>
+        {platform.sampleFileUrl && (
+          <button className="rec-load-sample" onClick={onLoadSample}>
+            <Sparkles size={14}/> 加载演示数据
+          </button>
+        )}
       </div>
       <div className="rec-upload-grid">
         {slots.map(s => (

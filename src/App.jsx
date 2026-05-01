@@ -12,6 +12,37 @@ import { readWorkbook, validateColumns } from './utils/excel.js'
 import { parseJushuitan } from './core/jushuitan.js'
 import { runReconcile } from './core/reconcile.js'
 
+async function pickFromBook(book, slot, platform, dispatch, fileLabel) {
+  // 把 book 里所有匹配的 sheet 一次性塞进对应槽位（兼容含多 sheet 的样例文件）
+  const allSlotMap = {}
+  for (const s of platform.uploadSlots) allSlotMap[s.sheetName] = s
+  allSlotMap[JST_SLOT.sheetName] = JST_SLOT
+  let stuffed = false
+  for (const [sheetName, slotDef] of Object.entries(allSlotMap)) {
+    if (book[sheetName]) {
+      const missing = validateColumns(book[sheetName], slotDef.requiredColumns || [])
+      if (missing.length === 0) {
+        dispatch({ type: 'SET_UPLOAD', key: slotDef.key,
+          payload: { fileName: `${fileLabel} · ${sheetName}`, rows: book[sheetName] } })
+        stuffed = true
+      }
+    }
+  }
+  if (stuffed) return
+
+  const rows = book[slot.sheetName] || Object.values(book)[0]
+  if (!rows) {
+    dispatch({ type: 'RECONCILE_FAIL', error: `${slot.label}: 未找到工作表 "${slot.sheetName}"` })
+    return
+  }
+  const missing = validateColumns(rows, slot.requiredColumns || [])
+  if (missing.length) {
+    dispatch({ type: 'RECONCILE_FAIL', error: `${slot.label} 缺少必需列：${missing.join('、')}` })
+    return
+  }
+  dispatch({ type: 'SET_UPLOAD', key: slot.key, payload: { fileName: fileLabel, rows } })
+}
+
 export default function App() {
   const { state, dispatch, login, logout } = useReconcileStore()
 
@@ -22,21 +53,6 @@ export default function App() {
   const platform = platformsById[state.platformId]
   const shops = MOCK_SHOPS[state.platformId] || []
   const shop = shops.find(s => s.id === state.shopId) || shops[0]
-  const isMock = platform.status === 'mock'
-
-  // 选中 mock 平台时，自动喂 mock 数据给引擎
-  useEffect(() => {
-    if (!state.authed) return
-    if (!isMock) return
-    if (state.result) return
-    try {
-      const bundle = platform.getMockBundle()
-      const result = runReconcile(bundle.platformResult, bundle.jstOrders)
-      dispatch({ type: 'RECONCILE_DONE', result, warnings: [] })
-    } catch (e) {
-      dispatch({ type: 'RECONCILE_FAIL', error: 'Mock 数据加载失败：' + e.message })
-    }
-  }, [state.authed, state.platformId, isMock, platform, state.result, dispatch])
 
   const requiredSlots = useMemo(() => {
     return [...platform.uploadSlots.filter(s => s.required), JST_SLOT]
@@ -47,41 +63,28 @@ export default function App() {
   const onPick = useCallback(async (slot, file) => {
     try {
       const book = await readWorkbook(file)
-
-      // 兼容：如果用户上传的是包含全部目标 sheet 的样例文件，一次性塞满槽位
-      const allSlotMap = {}
-      for (const s of platform.uploadSlots) allSlotMap[s.sheetName] = s
-      allSlotMap[JST_SLOT.sheetName] = JST_SLOT
-      let stuffed = false
-      for (const [sheetName, slotDef] of Object.entries(allSlotMap)) {
-        if (book[sheetName]) {
-          const missing = validateColumns(book[sheetName], slotDef.requiredColumns || [])
-          if (missing.length === 0) {
-            dispatch({ type: 'SET_UPLOAD', key: slotDef.key,
-              payload: { fileName: `${file.name} · ${sheetName}`, rows: book[sheetName] } })
-            stuffed = true
-          }
-        }
-      }
-      if (stuffed) return
-
-      const rows = book[slot.sheetName] || Object.values(book)[0]
-      if (!rows) {
-        dispatch({ type: 'RECONCILE_FAIL', error: `${slot.label}: 未找到工作表 "${slot.sheetName}"` })
-        return
-      }
-      const missing = validateColumns(rows, slot.requiredColumns || [])
-      if (missing.length) {
-        dispatch({ type: 'RECONCILE_FAIL', error: `${slot.label} 缺少必需列：${missing.join('、')}` })
-        return
-      }
-      dispatch({ type: 'SET_UPLOAD', key: slot.key, payload: { fileName: file.name, rows } })
+      await pickFromBook(book, slot, platform, dispatch, file.name)
     } catch (e) {
       dispatch({ type: 'RECONCILE_FAIL', error: `${slot.label} 解析失败：${e.message}` })
     }
   }, [dispatch, platform])
 
   const onClear = useCallback(slot => dispatch({ type: 'CLEAR_UPLOAD', key: slot.key }), [dispatch])
+
+  const onLoadSample = useCallback(async () => {
+    if (!platform.sampleFileUrl) return
+    try {
+      const resp = await fetch(platform.sampleFileUrl)
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+      const blob = await resp.blob()
+      const file = new File([blob], `${platform.id}.xlsx`, { type: blob.type })
+      const book = await readWorkbook(file)
+      const fakeSlot = platform.uploadSlots[0]
+      await pickFromBook(book, fakeSlot, platform, dispatch, `演示数据 · ${platform.name}`)
+    } catch (e) {
+      dispatch({ type: 'RECONCILE_FAIL', error: `加载演示数据失败：${e.message}` })
+    }
+  }, [platform, dispatch])
 
   const onStart = useCallback(() => {
     dispatch({ type: 'RECONCILE_START' })
@@ -138,7 +141,7 @@ export default function App() {
             onPick={onPick} onClear={onClear} onStart={onStart}
             canStart={canStart} reconciling={state.reconciling}
             result={state.result} error={state.error} parseWarnings={state.parseWarnings}
-            isMock={isMock}/>
+            onLoadSample={onLoadSample}/>
         ) : (
           <SkuProfitTab result={state.result}/>
         )}

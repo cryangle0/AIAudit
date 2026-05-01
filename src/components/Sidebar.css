@@ -12,7 +12,11 @@
   font-weight: 600; font-size: var(--font-size-lg);
   padding: 4px 8px; color: var(--text-primary);
 }
-.rec-brand-emoji { font-size: 22px; }
+.rec-brand-logo { 
+  width: 32px; 
+  height: 32px; 
+  object-fit: contain;
+}
 .rec-sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; }
 .rec-platform-row {
   display: flex; align-items: center; gap: 6px;
@@ -40,7 +44,13 @@
 .rec-shop-row:hover { background: var(--bg-hover); }
 .rec-shop-row.active { background: var(--accent-soft); color: var(--accent); }
 .rec-sidebar-section { display: flex; flex-direction: column; gap: 6px; padding: 0 8px; }
-.rec-month-label { font-size: var(--font-size-sm); color: var(--text-secondary); }
+.rec-month-label { 
+  font-size: var(--font-size-sm); 
+  color: var(--text-secondary); 
+  display: flex; 
+  align-items: center; 
+  gap: 6px;
+}
 .rec-month-select {
   padding: 6px 8px; border: 1px solid var(--border-color);
   border-radius: 6px; background: var(--bg-card); color: var(--text-primary);

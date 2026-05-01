@@ -1,4 +1,4 @@
-import { ChevronRight, ChevronDown, Moon, Sun, LogOut, Settings, Sparkles } from 'lucide-react'
+import { ChevronRight, ChevronDown, Moon, Sun, LogOut, Settings, Sparkles, Calendar } from 'lucide-react'
 import { useState } from 'react'
 import { PLATFORMS, MOCK_SHOPS } from '../platforms/index.js'
 import './Sidebar.css'
@@ -14,14 +14,14 @@ export default function Sidebar({
   return (
     <aside className="rec-sidebar">
       <div className="rec-sidebar-brand">
-        <span className="rec-brand-emoji">📊</span>
-        <span>AI对账</span>
+        <img src="/src/assets/logo.png" alt="爱对" className="rec-brand-logo" />
+        <span>爱对</span>
       </div>
 
       <nav className="rec-sidebar-nav">
         {PLATFORMS.map(p => {
           const open = expanded[p.id]
-          const isMock = p.status === 'mock'
+          const isDemo = p.status === 'demo'
           const shops = MOCK_SHOPS[p.id] || []
           return (
             <div key={p.id} className="rec-platform">
@@ -31,7 +31,7 @@ export default function Sidebar({
               >
                 {open ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
                 <span className="rec-platform-name">{p.name}</span>
-                {isMock && <span className="rec-tag rec-tag-demo"><Sparkles size={10}/>演示</span>}
+                {isDemo && <span className="rec-tag rec-tag-demo"><Sparkles size={10}/>演示</span>}
                 {p.status === 'ready' && <span className="rec-tag rec-tag-real">真实</span>}
               </button>
               {open && shops.map(s => (
@@ -47,7 +47,7 @@ export default function Sidebar({
       </nav>
 
       <div className="rec-sidebar-section">
-        <label className="rec-month-label">📅 月份</label>
+        <label className="rec-month-label"><Calendar size={14}/> 月份</label>
         <select
           className="rec-month-select"
           value={month}
