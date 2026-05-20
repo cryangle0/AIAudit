@@ -29,6 +29,23 @@ async function pickFromBook(book, slot, platform, dispatch, fileLabel) {
       }
     }
   }
+
+  // 聚水潭模糊匹配：如果精确 sheet 名没命中 JST 槽位，尝试找包含必需列的 sheet
+  const jstStuffed = stuffed && book[JST_SLOT.sheetName] &&
+    validateColumns(book[JST_SLOT.sheetName], JST_SLOT.requiredColumns).length === 0
+  if (!jstStuffed) {
+    for (const [sheetName, rows] of Object.entries(book)) {
+      if (!rows || rows.length === 0) continue
+      const missing = validateColumns(rows, JST_SLOT.requiredColumns)
+      if (missing.length === 0) {
+        dispatch({ type: 'SET_UPLOAD', key: JST_SLOT.key,
+          payload: { fileName: `${fileLabel} · ${sheetName}`, rows } })
+        stuffed = true
+        break
+      }
+    }
+  }
+
   if (stuffed) return
 
   const rows = book[slot.sheetName] || Object.values(book)[0]
@@ -113,30 +130,41 @@ export default function App() {
 
   const onStart = useCallback(() => {
     dispatch({ type: 'RECONCILE_START' })
-    setTimeout(() => {
-      try {
-        const fundRows = state.uploads.fund?.rows || []
-        const summaryRows = state.uploads.summary?.rows || []
-        const jstRows = state.uploads.jst?.rows || []
-        const platformResult = platform.transform({ fundRows, summaryRows })
-        const jstOrders = parseJushuitan(jstRows)
-        const result = runReconcile(platformResult, jstOrders)
-        dispatch({ type: 'RECONCILE_DONE', result, warnings: [] })
-      } catch (e) {
-        dispatch({ type: 'RECONCILE_FAIL', error: '对账失败：' + e.message })
-      }
-    }, 200)
+    // 使用 requestAnimationFrame + setTimeout 确保 UI 先渲染"对账中…"状态
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        try {
+          const fundRows = state.uploads.fund?.rows || []
+          const summaryRows = state.uploads.summary?.rows || []
+          const jstRows = state.uploads.jst?.rows || []
+          const platformResult = platform.transform({ fundRows, summaryRows })
+          const jstOrders = parseJushuitan(jstRows)
+          const result = runReconcile(platformResult, jstOrders)
+          dispatch({ type: 'RECONCILE_DONE', result, warnings: [] })
+        } catch (e) {
+          dispatch({ type: 'RECONCILE_FAIL', error: '对账失败：' + e.message })
+        }
+      }, 50)
+    })
   }, [state.uploads, platform, dispatch])
 
   const onScopeChange = useCallback(scope => dispatch({ type: 'SELECT_SCOPE', ...scope }), [dispatch])
   const onTabChange = useCallback(tab => dispatch({ type: 'SET_TAB', tab }), [dispatch])
   const onExport = useCallback(() => {
     if (!state.result) return
-    const head = ['订单号','款式','销售收入','净入账','成本','真实利润','系统毛利','毛利差','状态']
+    const head = ['订单号','款式','商品编码','销售收入','净入账','销售件数','成本','真实利润','系统毛利','毛利差','状态']
+    // CSV 安全：含逗号/引号/换行的字段需要用双引号包裹
+    const csvCell = v => {
+      const s = String(v ?? '')
+      return (s.includes(',') || s.includes('"') || s.includes('\n')) ? `"${s.replace(/"/g, '""')}"` : s
+    }
     const lines = [head.join(',')]
     for (const r of state.result.diffRows) {
-      lines.push([r.orderId, r.styleCode || '', r.saleRevenue, r.netSettled,
-        r.shippedCost, r.realProfit, r.systemProfit, r.profitDiff, r.bucket].join(','))
+      lines.push([
+        csvCell(r.orderId), csvCell(r.styleCode || ''), csvCell(r.productCode || ''),
+        r.saleRevenue, r.netSettled, r.qty || 0,
+        r.shippedCost, r.realProfit, r.systemProfit, r.profitDiff, r.bucket
+      ].join(','))
     }
     const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)

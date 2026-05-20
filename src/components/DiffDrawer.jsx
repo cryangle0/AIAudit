@@ -20,8 +20,10 @@ export default function DiffDrawer({ row, onClose }) {
         )}
 
         <div className="rec-drawer-summary">
-          <div><span>款式</span><strong>{row.styleCode || '—'}</strong></div>
-          <div><span>商品</span><strong>{row.productName || '—'}</strong></div>
+          <div><span>款式编码</span><strong>{row.styleCode || '—'}</strong></div>
+          <div><span>商品编码</span><strong>{row.productCode || '—'}</strong></div>
+          <div><span>商品名称</span><strong>{row.productName || '—'}</strong></div>
+          <div><span>销售件数</span><strong>{row.qty || '—'}</strong></div>
           <div><span>销售收入</span><strong>{fmtMoney(row.saleRevenue)}</strong></div>
           <div><span>净入账</span><strong>{fmtMoney(row.netSettled)}</strong></div>
           <div><span>成本</span><strong>{fmtMoney(row.shippedCost)}</strong></div>

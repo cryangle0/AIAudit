@@ -48,7 +48,9 @@ function buildDiffRow(orderId, p, j) {
   return {
     orderId,
     styleCode: j?.styleCode ?? null,
+    productCode: j?.productCode ?? null,
     productName: j?.productName ?? null,
+    qty: j?.qty ?? 0,
     saleRevenue,
     netSettled,
     shippedCost,

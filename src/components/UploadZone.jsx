@@ -4,7 +4,8 @@ import './UploadZone.css'
 
 export const JST_SLOT = {
   key: 'jst', label: '聚水潭导出', required: true,
-  sheetName: '聚水潭导出店铺数据', requiredColumns: ['原始线上订单号', '款式编码', '实发金额', '实发成本']
+  sheetName: '聚水潭导出店铺数据', requiredColumns: ['原始线上订单号', '款式编码', '实发金额', '实发成本'],
+  hint: '支持多月数据，自动识别含必需列的工作表'
 }
 
 function Slot({ slot, value, onPick, onClear }) {
@@ -31,7 +32,7 @@ function Slot({ slot, value, onPick, onClear }) {
           <Upload size={18}/>
           <div className="rec-slot-info">
             <div className="rec-slot-label">{slot.label}{slot.required ? <span className="req">*</span> : ''}</div>
-            <div className="rec-slot-meta">点击或拖拽 .xlsx 文件</div>
+            <div className="rec-slot-meta">{slot.hint || '点击或拖拽 .xlsx 文件'}</div>
           </div>
         </button>
       )}

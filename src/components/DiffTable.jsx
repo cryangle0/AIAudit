@@ -28,7 +28,7 @@ export default function DiffTable({ rows }) {
     let r = filter === 'all' ? rows : rows.filter(x => x.bucket === filter)
     if (search.trim()) {
       const q = search.trim().toLowerCase()
-      r = r.filter(x => x.orderId?.toLowerCase().includes(q) || x.styleCode?.toLowerCase().includes(q))
+      r = r.filter(x => x.orderId?.toLowerCase().includes(q) || x.styleCode?.toLowerCase().includes(q) || x.productCode?.toLowerCase().includes(q))
     }
     return r
   }, [rows, filter, search])
@@ -52,7 +52,7 @@ export default function DiffTable({ rows }) {
         ))}
         <input
           className="rec-search"
-          placeholder="搜索订单号/款式编码"
+          placeholder="搜索订单号/款式/商品编码"
           value={search} onChange={e => setSearch(e.target.value)}/>
         <span className="rec-count">{filtered.length} 单{filtered.length > 500 ? '（仅显示前 500）' : ''}</span>
       </div>
@@ -60,8 +60,8 @@ export default function DiffTable({ rows }) {
         <table>
           <thead>
             <tr>
-              <th></th><th>订单号</th><th>款式</th>
-              <th>销售收入</th><th>净入账</th><th>成本</th>
+              <th></th><th>订单号</th><th>款式</th><th>商品编码</th>
+              <th>销售收入</th><th>净入账</th><th>销售件数</th><th>成本</th>
               <th>真实利润</th><th>系统毛利</th><th>毛利差</th>
               <th>状态</th><th>AI</th>
             </tr>
@@ -72,8 +72,10 @@ export default function DiffTable({ rows }) {
                 <td>{r.bucket === 'matched' ? '✓' : '!'}</td>
                 <td className="mono">{r.orderId}</td>
                 <td>{r.styleCode || '—'}</td>
+                <td className="mono">{r.productCode || '—'}</td>
                 <td>{fmtMoney(r.saleRevenue)}</td>
                 <td>{fmtMoney(r.netSettled)}</td>
+                <td>{r.qty > 0 ? r.qty : '—'}</td>
                 <td>{fmtMoney(r.shippedCost)}</td>
                 <td className={r.realProfit < 0 ? 'neg' : ''}>{fmtMoney(r.realProfit)}</td>
                 <td>{fmtMoney(r.systemProfit)}</td>

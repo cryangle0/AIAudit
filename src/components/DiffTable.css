@@ -21,12 +21,14 @@
 }
 .rec-count { margin-left: auto; font-size: var(--font-size-sm); color: var(--text-muted); }
 .rec-difftable-scroll { max-height: 540px; overflow: auto; }
-.rec-difftable table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); }
+.rec-difftable table { width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); table-layout: auto; }
 .rec-difftable th, .rec-difftable td {
-  padding: 8px 10px; text-align: left;
+  padding: 7px 8px; text-align: left;
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
 }
+.rec-difftable th:nth-child(1), .rec-difftable td:nth-child(1) { width: 24px; text-align: center; }
+.rec-difftable th:nth-child(7), .rec-difftable td:nth-child(7) { text-align: center; } /* 销售件数居中 */
 .rec-difftable th { background: var(--bg-secondary); color: var(--text-muted); font-weight: 500;
   position: sticky; top: 0; }
 .rec-difftable tbody tr { cursor: pointer; }

@@ -30,6 +30,7 @@ export function parseJushuitan(rows = []) {
       map.set(oid, {
         orderId: oid,
         styleCode: r['款式编码'] ?? null,
+        productCode: r['商品编码'] ?? null,
         productName: r['商品简称'] ?? null,
         shippedAmount: 0, shippedCost: 0, grossProfit: 0,
         refundedAmount: 0, jstBillAmountSum: 0,
@@ -38,6 +39,9 @@ export function parseJushuitan(rows = []) {
       })
     }
     const o = map.get(oid)
+    // 补充：如果首行 productCode 为空但后续行有值，取后续行的
+    if (!o.productCode && r['商品编码']) o.productCode = r['商品编码']
+    if (!o.styleCode && r['款式编码']) o.styleCode = r['款式编码']
     o.shippedAmount += num(r['实发金额'])
     o.shippedCost += num(r['实发成本'])
     o.grossProfit += num(r['销售毛利'])
