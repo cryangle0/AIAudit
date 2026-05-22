@@ -3,3 +3,10 @@ dist
 .vite
 *.log
 .DS_Store
+
+# 客户提供的参考文件，不入仓库
+系统初稿模板*.xlsx
+模板图片/
+_*.png
+_*.txt
+_*.zip
