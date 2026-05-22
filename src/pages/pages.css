@@ -208,3 +208,98 @@
 .rec-fee-type-pills {
   display: flex; flex-wrap: wrap; gap: 6px;
 }
+
+
+/* 分组表头着色 */
+.rec-grouped-h-pos {
+  background: rgba(58, 175, 107, 0.12) !important;
+  color: #2f9d68 !important;
+  text-align: center !important;
+  font-weight: 600 !important;
+}
+.rec-grouped-h-neg {
+  background: rgba(210, 58, 58, 0.10) !important;
+  color: #d23a3a !important;
+  text-align: center !important;
+  font-weight: 600 !important;
+}
+.rec-grouped-h-cost {
+  background: rgba(241, 178, 56, 0.12) !important;
+  color: #c98412 !important;
+  text-align: center !important;
+  font-weight: 600 !important;
+}
+.rec-data-table .cost-total { color: #c98412; }
+
+/* 演示数据横幅 */
+.rec-demo-banner {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 8px;
+  background: rgba(241, 178, 56, 0.10);
+  border: 1px solid rgba(241, 178, 56, 0.3);
+  color: #c98412; font-size: var(--font-size-sm);
+}
+.rec-demo-banner svg { flex-shrink: 0; }
+.rec-link-btn {
+  background: transparent; border: none; padding: 0;
+  color: var(--accent); cursor: pointer; text-decoration: underline;
+  font-size: var(--font-size-sm); margin-left: 8px;
+}
+
+/* 商品利润表 — 双栏布局 */
+.rec-product-profit-layout {
+  display: grid; grid-template-columns: 1fr 320px; gap: 16px;
+}
+.rec-product-profit-main { min-width: 0; }
+.rec-product-profit-side {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.rec-side-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 12px; padding: 14px 16px;
+}
+.rec-side-card-title {
+  font-size: var(--font-size-md); font-weight: 600;
+  color: var(--text-primary); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-color);
+}
+.rec-side-metric {
+  display: flex; gap: 10px; align-items: center;
+  padding: 8px 0;
+}
+.rec-side-metric svg { color: var(--text-muted); flex-shrink: 0; }
+.rec-side-metric-label {
+  font-size: var(--font-size-xs); color: var(--text-muted);
+}
+.rec-side-metric-value {
+  font-size: var(--font-size-md); font-weight: 600;
+  color: var(--text-primary);
+}
+.rec-side-metric-good { color: #2f9d68; }
+
+/* 月份柱状图 */
+.rec-monthly-bars {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.rec-monthly-bar {
+  display: grid; grid-template-columns: 36px 1fr 70px;
+  gap: 8px; align-items: center;
+}
+.rec-monthly-bar-label {
+  font-size: var(--font-size-xs); color: var(--text-muted);
+}
+.rec-monthly-bar-track {
+  background: var(--bg-secondary); height: 8px; border-radius: 4px;
+  overflow: hidden;
+}
+.rec-monthly-bar-fill {
+  background: var(--accent); height: 100%; border-radius: 4px;
+}
+.rec-monthly-bar-value {
+  font-size: var(--font-size-xs); color: var(--text-secondary);
+  text-align: right;
+}
+
+@media (max-width: 1280px) {
+  .rec-product-profit-layout { grid-template-columns: 1fr; }
+}

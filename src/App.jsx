@@ -14,6 +14,7 @@ import RecvSummaryPage from './pages/RecvSummaryPage.jsx'
 import RecvDetailPage from './pages/RecvDetailPage.jsx'
 import BillSummaryPage from './pages/BillSummaryPage.jsx'
 import BillDetailPage from './pages/BillDetailPage.jsx'
+import ShopProfitPage from './pages/ShopProfitPage.jsx'
 import PlaceholderPage from './pages/PlaceholderPage.jsx'
 import { useReconcileStore } from './hooks/useReconcileStore.js'
 import { useSettings } from './hooks/useSettings.js'
@@ -199,7 +200,7 @@ export default function App() {
 
   // 当前页是否需要 TopBar 显示对账上下文
   const isReconcileContextPage = [
-    'diff-analyze', 'product-profit',
+    'diff-analyze', 'product-profit', 'shop-profit',
     'recv-summary', 'recv-detail', 'bill-summary', 'bill-detail',
     'profit-analyze', 'data-allocate'
   ].includes(pageId)
@@ -219,9 +220,14 @@ export default function App() {
         return <ProductCostPage productCost={productCost} currentPeriod={state.month}/>
       case 'product-profit':
         return <ProductProfitPage
-          result={state.result} costItems={productCost.items} currentPeriod={state.month}
+          reconcileResult={state.result} costItems={productCost.items} currentPeriod={state.month}
           feeRecords={feeRecords.items} allocStandards={allocStandards.items}
           shopName={shop?.name || ''}/>
+      case 'shop-profit':
+        return <ShopProfitPage
+          reconcileResult={state.result} shopName={shop?.name || ''}
+          costItems={productCost.items} feeRecords={feeRecords.items}
+          allocStandards={allocStandards.items} period={state.month}/>
       case 'data-aggregate':
         return <DataAggregatePage feeRecords={feeRecords} currentPeriod={state.month}/>
       case 'alloc-standard':
@@ -241,9 +247,11 @@ export default function App() {
       case 'recv-detail':
         return <RecvDetailPage reconcileResult={state.result} shopName={shop?.name || ''} period={state.month}/>
       case 'bill-summary':
-        return <BillSummaryPage reconcileResult={state.result} shopName={shop?.name || ''}/>
+        return <BillSummaryPage reconcileResult={state.result}
+          shopName={shop?.name || ''} platformName={platform.name} period={state.month}/>
       case 'bill-detail':
-        return <BillDetailPage reconcileResult={state.result} shopName={shop?.name || ''} period={state.month}/>
+        return <BillDetailPage reconcileResult={state.result}
+          shopName={shop?.name || ''} platformName={platform.name} period={state.month}/>
       default:
         return <PlaceholderPage pageId={pageId}/>
     }

@@ -1,163 +1,184 @@
-// 商品利润表（报表中心 → 商品利润）
-// 严格按客户模板字段：店铺/商品 / 扣税收入 / 参考成本 / 分配费用 / 利润
-// 当前阶段：基于聚水潭+商品成本表，用销售净收入作扣税收入近似，分配费用暂留 0
-// 月度趋势 + 关键指标卡（对应模板"智能分析区域"）
+// 商品利润表 — 严格按客户《系统初稿模板5.22》Excel 表头
+// 列：店铺名称 | 订单号 | 款式编码 | 商品编码 | 商品名称 | 品类 | 数量 | 单价 |
+//   销售金额 | 成本 | 标费 | 辅料 | 毛利润 | 毛利率 | 备注
+// + 右侧"智能分析区域"：关键指标卡片 + 月份统计柱形图
 
 import { useMemo, useState } from 'react'
+import { Sparkles, TrendingUp, DollarSign, Package } from 'lucide-react'
 import { fmtMoney, fmtNumber, fmtPct } from '../utils/format.js'
-import { findCost } from '../hooks/useProductCost.js'
-import { runAllocation } from '../core/allocate.js'
+import { buildProductProfitFromReconcile } from '../core/reportBuilder.js'
+import { DEMO_PRODUCT_PROFIT, DEMO_MONTHLY_STATS, DEMO_KEY_METRICS } from '../core/demoData.js'
 import './pages.css'
 
-export default function ProductProfitPage({ result, costItems, currentPeriod, feeRecords, allocStandards, shopName }) {
-  const [sortKey, setSortKey] = useState('profit')
-  const [filter, setFilter] = useState('all')
+export default function ProductProfitPage({
+  reconcileResult, costItems, currentPeriod, feeRecords, allocStandards, shopName
+}) {
+  const [useDemo, setUseDemo] = useState(false)
 
-  const items = useMemo(() => {
-    if (!result) return []
-    // 计算本期分配费用（依赖费用归集 + 分配标准）
-    let allocByOrder = new Map()
-    if (feeRecords && allocStandards) {
-      const allocResult = runAllocation({
-        feeRecords, standards: allocStandards, reconcileResult: result, period: currentPeriod
-      })
-      for (const a of allocResult.allocations) {
-        if (!a.platformOrderId) continue
-        allocByOrder.set(a.platformOrderId, (allocByOrder.get(a.platformOrderId) || 0) + a.amount)
-      }
-    }
-    // 把订单分配费用聚合到 SKU
-    const allocBySku = new Map()
-    for (const r of result.diffRows) {
-      const fee = allocByOrder.get(r.orderId) || 0
-      if (fee === 0) continue
-      const k = r.styleCode || '—'
-      allocBySku.set(k, (allocBySku.get(k) || 0) + fee)
-    }
-
-    return result.skuStats.map(s => {
-      const customCost = findCost(costItems || [], currentPeriod, s.styleCode, null)
-      const refCost = customCost
-        ? (Number(customCost.baseCost || 0) + Number(customCost.tagFee || 0) + Number(customCost.accessoryFee || 0)) * (s.qty || 0)
-        : s.cost
-      const taxedRevenue = s.revenue
-      const allocatedFee = allocBySku.get(s.styleCode || '—') || 0
-      const profit = taxedRevenue - refCost - allocatedFee
-      return {
-        ...s,
-        taxedRevenue,
-        refCost,
-        costSource: customCost ? 'custom' : 'jushuitan',
-        allocatedFee,
-        profit,
-        profitRate: taxedRevenue ? profit / taxedRevenue : 0
-      }
+  const realRows = useMemo(() => {
+    if (!reconcileResult) return []
+    return buildProductProfitFromReconcile({
+      reconcileResult, costItems, feeRecords, allocStandards, period: currentPeriod, shopName
     })
-  }, [result, costItems, currentPeriod, feeRecords, allocStandards])
+  }, [reconcileResult, costItems, feeRecords, allocStandards, currentPeriod, shopName])
 
-  const filtered = useMemo(() => {
-    let arr = [...items]
-    if (filter === 'positive') arr = arr.filter(s => s.profit > 0)
-    if (filter === 'negative') arr = arr.filter(s => s.profit <= 0)
-    arr.sort((a, b) => b[sortKey] - a[sortKey])
-    return arr
-  }, [items, sortKey, filter])
+  const showDemo = !reconcileResult || useDemo
+  const rows = showDemo ? DEMO_PRODUCT_PROFIT : realRows
 
-  if (!result) {
-    return <div className="rec-page"><div className="rec-page-head"><h2>商品利润表</h2>
-      <div className="rec-page-sub">先在「差异分析」页上传账单完成对账</div>
-    </div></div>
-  }
+  // 关键指标
+  const metrics = useMemo(() => {
+    if (showDemo) return DEMO_KEY_METRICS
+    return {
+      totalQty: rows.reduce((s, r) => s + r.qty, 0),
+      totalAmount: rows.reduce((s, r) => s + r.revenue, 0),
+      totalCost: rows.reduce((s, r) => s + r.cost + r.tagFee + r.accessoryFee, 0),
+      totalProfit: rows.reduce((s, r) => s + r.profit, 0),
+      profitRate: (() => {
+        const rev = rows.reduce((s, r) => s + r.revenue, 0)
+        const profit = rows.reduce((s, r) => s + r.profit, 0)
+        return rev ? profit / rev : 0
+      })()
+    }
+  }, [showDemo, rows])
 
-  const totals = filtered.reduce((acc, s) => {
-    acc.qty += s.qty; acc.taxedRevenue += s.taxedRevenue
-    acc.refCost += s.refCost; acc.allocatedFee += s.allocatedFee; acc.profit += s.profit
-    return acc
-  }, { qty: 0, taxedRevenue: 0, refCost: 0, allocatedFee: 0, profit: 0 })
-  const maxProfit = Math.max(...filtered.map(s => Math.abs(s.profit)), 1)
+  const monthlyStats = showDemo ? DEMO_MONTHLY_STATS : []
+  const maxMonthly = Math.max(...monthlyStats.map(m => m.amount), 1)
 
   return (
     <div className="rec-page">
       <div className="rec-page-head">
         <h2>商品利润表</h2>
         <div className="rec-page-sub">
-          汇总维度：店铺/商品。字段：扣税收入、参考成本、分配费用、利润。
-          参考成本优先取「商品成本」自维护数据，缺失时回落到聚水潭实发成本。
+          按客户模板表头：店铺名称 / 订单号 / 款式编码 / 商品编码 / 商品名称 / 品类 / 数量 / 单价 /
+          销售金额 / 成本 / 标费 / 辅料 / 毛利润 / 毛利率 / 备注
         </div>
       </div>
 
-      <div className="rec-kpi-grid rec-kpi-grid-4">
-        <div className="rec-kpi-card tone-neutral">
-          <div className="rec-kpi-label">总销量</div>
-          <div className="rec-kpi-value">{fmtNumber(totals.qty)}</div>
+      {showDemo && (
+        <div className="rec-demo-banner">
+          <Sparkles size={14}/> 当前显示演示数据。
+          {!reconcileResult ? '完成对账后将生成真实商品利润数据。' :
+            <button className="rec-link-btn" onClick={() => setUseDemo(false)}>切换到真实数据</button>}
         </div>
-        <div className="rec-kpi-card tone-neutral">
-          <div className="rec-kpi-label">扣税收入</div>
-          <div className="rec-kpi-value">{fmtMoney(totals.taxedRevenue)}</div>
-        </div>
-        <div className="rec-kpi-card tone-neutral">
-          <div className="rec-kpi-label">参考成本</div>
-          <div className="rec-kpi-value">{fmtMoney(totals.refCost)}</div>
-        </div>
-        <div className={`rec-kpi-card tone-${totals.profit >= 0 ? 'good' : 'bad'}`}>
-          <div className="rec-kpi-label">利润</div>
-          <div className="rec-kpi-value">{fmtMoney(totals.profit)}</div>
-          <div className="rec-kpi-sub">毛利率 {fmtPct(totals.taxedRevenue ? totals.profit / totals.taxedRevenue : 0)}</div>
-        </div>
-      </div>
+      )}
 
-      <div className="rec-toolbar">
-        <span>排序：</span>
-        {[['profit', '利润↓'], ['qty', '销量↓'], ['profitRate', '毛利率↓']].map(([k, l]) => (
-          <button key={k} className={`rec-pill ${sortKey === k ? 'active' : ''}`}
-            onClick={() => setSortKey(k)}>{l}</button>
-        ))}
-        <span style={{ marginLeft: 16 }}>显示：</span>
-        {[['all', '全部'], ['positive', '盈利'], ['negative', '亏损/0']].map(([k, l]) => (
-          <button key={k} className={`rec-pill ${filter === k ? 'active' : ''}`}
-            onClick={() => setFilter(k)}>{l}</button>
-        ))}
-      </div>
-
-      <div className="rec-table-card">
-        <table className="rec-data-table">
-          <thead>
-            <tr><th>款式编码</th><th>件数</th><th>扣税收入</th><th>参考成本</th>
-              <th>分配费用</th><th>利润</th><th>毛利率</th><th>占比</th></tr>
-          </thead>
-          <tbody>
-            {filtered.map(s => {
-              const w = (Math.abs(s.profit) / maxProfit) * 100
-              return (
-                <tr key={s.styleCode}>
-                  <td className="mono">{s.styleCode}
-                    {s.costSource === 'custom' && <span className="rec-tag-mini">自维护</span>}
-                  </td>
-                  <td>{fmtNumber(s.qty)}</td>
-                  <td>{fmtMoney(s.taxedRevenue)}</td>
-                  <td>{fmtMoney(s.refCost)}</td>
-                  <td>{fmtMoney(s.allocatedFee)}</td>
-                  <td className={s.profit < 0 ? 'neg' : 'pos'}>{fmtMoney(s.profit)}</td>
-                  <td>{fmtPct(s.profitRate)}</td>
-                  <td><div className="rec-bar" style={{ width: `${w}%`,
-                    background: s.profit < 0 ? '#d23a3a' : '#2f9d68' }}/></td>
+      {/* 主表 + 右侧智能分析区双栏布局 */}
+      <div className="rec-product-profit-layout">
+        {/* 左侧：主表 */}
+        <div className="rec-product-profit-main">
+          {!showDemo && reconcileResult && (
+            <div className="rec-toolbar">
+              <span className="rec-spacer"/>
+              <button className="rec-btn" onClick={() => setUseDemo(true)}>
+                <Sparkles size={14}/> 查看演示数据
+              </button>
+            </div>
+          )}
+          <div className="rec-table-card">
+            <table className="rec-data-table">
+              <thead>
+                <tr>
+                  <th>店铺名称</th>
+                  <th>订单号</th>
+                  <th>款式编码</th>
+                  <th>商品编码</th>
+                  <th>商品名称</th>
+                  <th>品类</th>
+                  <th>数量</th>
+                  <th>单价</th>
+                  <th>销售金额</th>
+                  <th>成本</th>
+                  <th>标费</th>
+                  <th>辅料</th>
+                  <th>毛利润</th>
+                  <th>毛利率</th>
+                  <th>备注</th>
                 </tr>
-              )
-            })}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td><strong>合计</strong></td>
-              <td>{fmtNumber(totals.qty)}</td>
-              <td>{fmtMoney(totals.taxedRevenue)}</td>
-              <td>{fmtMoney(totals.refCost)}</td>
-              <td>{fmtMoney(totals.allocatedFee)}</td>
-              <td>{fmtMoney(totals.profit)}</td>
-              <td>{fmtPct(totals.taxedRevenue ? totals.profit / totals.taxedRevenue : 0)}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
+              </thead>
+              <tbody>
+                {rows.slice(0, 500).map((r, i) => (
+                  <tr key={i}>
+                    <td>{r.shopName}</td>
+                    <td className="mono">{r.orderId}</td>
+                    <td className="mono">{r.styleCode}</td>
+                    <td className="mono">{r.productCode}</td>
+                    <td>{r.productName}</td>
+                    <td>{r.category}</td>
+                    <td>{fmtNumber(r.qty)}</td>
+                    <td>{fmtMoney(r.price)}</td>
+                    <td>{fmtMoney(r.revenue)}</td>
+                    <td>{fmtMoney(r.cost)}</td>
+                    <td>{fmtMoney(r.tagFee)}</td>
+                    <td>{fmtMoney(r.accessoryFee)}</td>
+                    <td className={r.profit < 0 ? 'neg' : 'pos'}><strong>{fmtMoney(r.profit)}</strong></td>
+                    <td>{fmtPct(r.profitRate)}</td>
+                    <td className="rec-muted">{r.memo || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 右侧：智能分析区 */}
+        <aside className="rec-product-profit-side">
+          <div className="rec-side-card">
+            <div className="rec-side-card-title">关键指标</div>
+            <div className="rec-side-metric">
+              <Package size={16}/>
+              <div>
+                <div className="rec-side-metric-label">总销量</div>
+                <div className="rec-side-metric-value">{fmtNumber(metrics.totalQty)}</div>
+              </div>
+            </div>
+            <div className="rec-side-metric">
+              <DollarSign size={16}/>
+              <div>
+                <div className="rec-side-metric-label">总销售金额</div>
+                <div className="rec-side-metric-value">{fmtMoney(metrics.totalAmount)}</div>
+              </div>
+            </div>
+            <div className="rec-side-metric">
+              <DollarSign size={16}/>
+              <div>
+                <div className="rec-side-metric-label">总成本</div>
+                <div className="rec-side-metric-value">{fmtMoney(metrics.totalCost)}</div>
+              </div>
+            </div>
+            <div className="rec-side-metric">
+              <TrendingUp size={16}/>
+              <div>
+                <div className="rec-side-metric-label">总毛利润</div>
+                <div className="rec-side-metric-value rec-side-metric-good">{fmtMoney(metrics.totalProfit)}</div>
+              </div>
+            </div>
+            <div className="rec-side-metric">
+              <TrendingUp size={16}/>
+              <div>
+                <div className="rec-side-metric-label">毛利率</div>
+                <div className="rec-side-metric-value rec-side-metric-good">{fmtPct(metrics.profitRate)}</div>
+              </div>
+            </div>
+          </div>
+
+          {monthlyStats.length > 0 && (
+            <div className="rec-side-card">
+              <div className="rec-side-card-title">全年销售金额</div>
+              <div className="rec-monthly-bars">
+                {monthlyStats.map(m => (
+                  <div key={m.month} className="rec-monthly-bar">
+                    <div className="rec-monthly-bar-label">{m.month}</div>
+                    <div className="rec-monthly-bar-track">
+                      <div className="rec-monthly-bar-fill"
+                        style={{ width: `${(m.amount / maxMonthly) * 100}%` }}/>
+                    </div>
+                    <div className="rec-monthly-bar-value">{fmtMoney(m.amount)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   )
