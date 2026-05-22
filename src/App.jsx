@@ -6,10 +6,20 @@ import TopBar from './components/TopBar.jsx'
 import DiffAnalyzePage from './pages/DiffAnalyzePage.jsx'
 import ProductCostPage from './pages/ProductCostPage.jsx'
 import ProductProfitPage from './pages/ProductProfitPage.jsx'
+import DataAggregatePage from './pages/DataAggregatePage.jsx'
+import AllocStandardPage from './pages/AllocStandardPage.jsx'
+import DataAllocatePage from './pages/DataAllocatePage.jsx'
+import ProfitAnalyzePage from './pages/ProfitAnalyzePage.jsx'
+import RecvSummaryPage from './pages/RecvSummaryPage.jsx'
+import RecvDetailPage from './pages/RecvDetailPage.jsx'
+import BillSummaryPage from './pages/BillSummaryPage.jsx'
+import BillDetailPage from './pages/BillDetailPage.jsx'
 import PlaceholderPage from './pages/PlaceholderPage.jsx'
 import { useReconcileStore } from './hooks/useReconcileStore.js'
 import { useSettings } from './hooks/useSettings.js'
 import { useProductCost } from './hooks/useProductCost.js'
+import { useFeeRecords } from './hooks/useFeeRecords.js'
+import { useAllocStandards } from './hooks/useAllocStandards.js'
 import { platformsById, MOCK_SHOPS } from './platforms/index.js'
 import { JST_SLOT } from './components/UploadZone.jsx'
 import { readWorkbook, validateColumns } from './utils/excel.js'
@@ -69,6 +79,8 @@ export default function App() {
   const { state, dispatch, login, logout } = useReconcileStore()
   const [settings, updateSettings, resetSettings] = useSettings()
   const productCost = useProductCost()
+  const feeRecords = useFeeRecords()
+  const allocStandards = useAllocStandards()
 
   const pageId = state.pageId || DEFAULT_PAGE
 
@@ -186,7 +198,11 @@ export default function App() {
   if (!state.authed) return <LoginPage onLogin={login}/>
 
   // 当前页是否需要 TopBar 显示对账上下文
-  const isReconcileContextPage = ['diff-analyze', 'product-profit'].includes(pageId)
+  const isReconcileContextPage = [
+    'diff-analyze', 'product-profit',
+    'recv-summary', 'recv-detail', 'bill-summary', 'bill-detail',
+    'profit-analyze', 'data-allocate'
+  ].includes(pageId)
 
   const renderPage = () => {
     switch (pageId) {
@@ -200,10 +216,34 @@ export default function App() {
             onLoadSample={onLoadSample}/>
         )
       case 'product-cost':
-        return <ProductCostPage currentPeriod={state.month}/>
+        return <ProductCostPage productCost={productCost} currentPeriod={state.month}/>
       case 'product-profit':
         return <ProductProfitPage
-          result={state.result} costItems={productCost.items} currentPeriod={state.month}/>
+          result={state.result} costItems={productCost.items} currentPeriod={state.month}
+          feeRecords={feeRecords.items} allocStandards={allocStandards.items}
+          shopName={shop?.name || ''}/>
+      case 'data-aggregate':
+        return <DataAggregatePage feeRecords={feeRecords} currentPeriod={state.month}/>
+      case 'alloc-standard':
+        return <AllocStandardPage allocStandards={allocStandards}/>
+      case 'data-allocate':
+        return <DataAllocatePage
+          feeRecords={feeRecords.items} allocStandards={allocStandards.items}
+          reconcileResult={state.result} period={state.month}/>
+      case 'profit-analyze':
+        return <ProfitAnalyzePage
+          reconcileResult={state.result}
+          feeRecords={feeRecords.items} allocStandards={allocStandards.items}
+          costItems={productCost.items} period={state.month}
+          platformId={state.platformId} shopName={shop?.name || ''}/>
+      case 'recv-summary':
+        return <RecvSummaryPage reconcileResult={state.result} shopName={shop?.name || ''}/>
+      case 'recv-detail':
+        return <RecvDetailPage reconcileResult={state.result} shopName={shop?.name || ''} period={state.month}/>
+      case 'bill-summary':
+        return <BillSummaryPage reconcileResult={state.result} shopName={shop?.name || ''}/>
+      case 'bill-detail':
+        return <BillDetailPage reconcileResult={state.result} shopName={shop?.name || ''} period={state.month}/>
       default:
         return <PlaceholderPage pageId={pageId}/>
     }

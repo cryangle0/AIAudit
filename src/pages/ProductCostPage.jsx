@@ -5,7 +5,6 @@
 import { useRef, useState, useMemo } from 'react'
 import { Upload, Plus, Trash2, Download, FileSpreadsheet } from 'lucide-react'
 import * as XLSX from 'xlsx'
-import { useProductCost } from '../hooks/useProductCost.js'
 import { readWorkbook } from '../utils/excel.js'
 import { fmtMoney } from '../utils/format.js'
 import './pages.css'
@@ -41,8 +40,8 @@ function calcTotal(rec) {
   return num(rec.baseCost) + num(rec.tagFee) + num(rec.accessoryFee)
 }
 
-export default function ProductCostPage({ currentPeriod }) {
-  const { items, setAll, addOrUpdate, remove, clearAll } = useProductCost()
+export default function ProductCostPage({ productCost, currentPeriod }) {
+  const { items, setAll, addOrUpdate, remove, clearAll } = productCost
   const [periodFilter, setPeriodFilter] = useState(currentPeriod || '')
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null) // 新增/编辑表单

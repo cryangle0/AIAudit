@@ -6,21 +6,42 @@
 import { useMemo, useState } from 'react'
 import { fmtMoney, fmtNumber, fmtPct } from '../utils/format.js'
 import { findCost } from '../hooks/useProductCost.js'
+import { runAllocation } from '../core/allocate.js'
 import './pages.css'
 
-export default function ProductProfitPage({ result, costItems, currentPeriod }) {
+export default function ProductProfitPage({ result, costItems, currentPeriod, feeRecords, allocStandards, shopName }) {
   const [sortKey, setSortKey] = useState('profit')
   const [filter, setFilter] = useState('all')
 
   const items = useMemo(() => {
     if (!result) return []
+    // 计算本期分配费用（依赖费用归集 + 分配标准）
+    let allocByOrder = new Map()
+    if (feeRecords && allocStandards) {
+      const allocResult = runAllocation({
+        feeRecords, standards: allocStandards, reconcileResult: result, period: currentPeriod
+      })
+      for (const a of allocResult.allocations) {
+        if (!a.platformOrderId) continue
+        allocByOrder.set(a.platformOrderId, (allocByOrder.get(a.platformOrderId) || 0) + a.amount)
+      }
+    }
+    // 把订单分配费用聚合到 SKU
+    const allocBySku = new Map()
+    for (const r of result.diffRows) {
+      const fee = allocByOrder.get(r.orderId) || 0
+      if (fee === 0) continue
+      const k = r.styleCode || '—'
+      allocBySku.set(k, (allocBySku.get(k) || 0) + fee)
+    }
+
     return result.skuStats.map(s => {
       const customCost = findCost(costItems || [], currentPeriod, s.styleCode, null)
       const refCost = customCost
         ? (Number(customCost.baseCost || 0) + Number(customCost.tagFee || 0) + Number(customCost.accessoryFee || 0)) * (s.qty || 0)
         : s.cost
-      const taxedRevenue = s.revenue                  // 扣税收入：当前用聚水潭实发金额近似
-      const allocatedFee = 0                          // 分配费用：待"数据分配"模块实现后填入
+      const taxedRevenue = s.revenue
+      const allocatedFee = allocBySku.get(s.styleCode || '—') || 0
       const profit = taxedRevenue - refCost - allocatedFee
       return {
         ...s,
@@ -32,7 +53,7 @@ export default function ProductProfitPage({ result, costItems, currentPeriod }) 
         profitRate: taxedRevenue ? profit / taxedRevenue : 0
       }
     })
-  }, [result, costItems, currentPeriod])
+  }, [result, costItems, currentPeriod, feeRecords, allocStandards])
 
   const filtered = useMemo(() => {
     let arr = [...items]

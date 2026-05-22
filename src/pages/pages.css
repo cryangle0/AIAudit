@@ -178,3 +178,33 @@
 .rec-dialog-foot {
   display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;
 }
+
+
+/* 费用类型标签 */
+.rec-tag-fee {
+  display: inline-block; padding: 2px 8px; margin: 1px 3px 1px 0;
+  border-radius: 999px; font-size: var(--font-size-xs);
+  background: var(--accent-soft); color: var(--accent);
+  border: 1px solid transparent;
+}
+.rec-tag-pos {
+  padding: 2px 8px; border-radius: 4px; font-size: var(--font-size-xs);
+  background: rgba(58, 175, 107, 0.14); color: #2f9d68;
+}
+.rec-tag-neg {
+  padding: 2px 8px; border-radius: 4px; font-size: var(--font-size-xs);
+  background: rgba(210, 58, 58, 0.14); color: #d23a3a;
+}
+
+.rec-fee-type-group {
+  margin-top: 14px; display: flex; flex-direction: column; gap: 6px;
+}
+.rec-fee-type-group > span {
+  font-size: var(--font-size-sm); color: var(--text-secondary);
+}
+.rec-fee-type-group em {
+  color: var(--text-muted); font-style: normal; font-size: 11px;
+}
+.rec-fee-type-pills {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
