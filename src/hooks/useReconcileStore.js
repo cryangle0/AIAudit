@@ -7,6 +7,7 @@ const initial = {
   shopId: 'xzf-dehuang',
   month: '2026-01',
   activeTab: 'reconcile',
+  pageId: 'diff-analyze',
   uploads: {},
   reconciling: false,
   result: null,
@@ -25,6 +26,7 @@ function reducer(state, action) {
       uploads: {}, result: null, error: null
     }
     case 'SET_TAB':  return { ...state, activeTab: action.tab }
+    case 'SET_PAGE': return { ...state, pageId: action.pageId }
     case 'SET_UPLOAD': return { ...state, uploads: { ...state.uploads, [action.key]: action.payload }, error: null }
     case 'CLEAR_UPLOAD': {
       const next = { ...state.uploads }; delete next[action.key]

@@ -26,19 +26,46 @@ function classify(p, j) {
   return 'matched' // 兜底；后续会被 profit_anomaly 升级
 }
 
-function buildDiffRow(orderId, p, j) {
+// 在指定 period 下，按 styleCode 优先、productCode 兜底查找商品成本
+function findCustomCost(items, period, styleCode, productCode) {
+  if (!items || items.length === 0) return null
+  for (const x of items) {
+    if (x.period !== period) continue
+    if (styleCode && x.styleCode === styleCode) return x
+  }
+  for (const x of items) {
+    if (x.period !== period) continue
+    if (productCode && x.productCode === productCode) return x
+  }
+  return null
+}
+
+function buildDiffRow(orderId, p, j, opts = {}) {
   let bucket = classify(p, j)
 
   const saleRevenue = p?.saleRevenue ?? 0
   const netSettled = p?.netSettled ?? 0
-  const shippedCost = j?.shippedCost ?? 0
-  const systemProfit = j?.grossProfit ?? 0
+  const qty = j?.qty ?? 0
+  const styleCode = j?.styleCode ?? null
+  const productCode = j?.productCode ?? null
 
+  // 成本：优先查商品成本表，没找到则回落聚水潭实发成本
+  let shippedCost = j?.shippedCost ?? 0
+  let costSource = 'jushuitan'
+  if (opts.costItems && opts.period) {
+    const c = findCustomCost(opts.costItems, opts.period, styleCode, productCode)
+    if (c) {
+      const unitCost = Number(c.baseCost || 0) + Number(c.tagFee || 0) + Number(c.accessoryFee || 0)
+      shippedCost = unitCost * (qty || 1)
+      costSource = 'custom'
+    }
+  }
+
+  const systemProfit = j?.grossProfit ?? 0
   const realProfit = netSettled - shippedCost
   const diff = realProfit - systemProfit
 
   // upgrade matched/duplicated → profit_anomaly if applicable
-  // 退款单 (refundedAmount > 0) 不参与异常判定 —— 退款本身就是负毛利不算异常
   if ((bucket === 'matched' || bucket === 'duplicated') &&
       p && j && (j.refundedAmount || 0) === 0 &&
       isProfitAnomaly(diff, systemProfit)) {
@@ -47,13 +74,14 @@ function buildDiffRow(orderId, p, j) {
 
   return {
     orderId,
-    styleCode: j?.styleCode ?? null,
-    productCode: j?.productCode ?? null,
+    styleCode,
+    productCode,
     productName: j?.productName ?? null,
-    qty: j?.qty ?? 0,
+    qty,
     saleRevenue,
     netSettled,
     shippedCost,
+    costSource,
     realProfit,
     systemProfit,
     profitDiff: diff,
@@ -86,14 +114,14 @@ function buildSkuStats(jstOrders) {
   return Array.from(m.values()).sort((a, b) => b.profit - a.profit)
 }
 
-export function runReconcile(platformResult, jstOrders) {
+export function runReconcile(platformResult, jstOrders, opts = {}) {
   const platMap = new Map(platformResult.orders.map(o => [o.orderId, o]))
   const jstMap = new Map(jstOrders.map(o => [o.orderId, o]))
 
   const allIds = new Set([...platMap.keys(), ...jstMap.keys()])
   const diffRows = []
   for (const id of allIds) {
-    diffRows.push(buildDiffRow(id, platMap.get(id), jstMap.get(id)))
+    diffRows.push(buildDiffRow(id, platMap.get(id), jstMap.get(id), opts))
   }
 
   const kpi = {
@@ -105,7 +133,8 @@ export function runReconcile(platformResult, jstOrders) {
     diffCount: diffRows.filter(r => r.bucket !== 'matched').length,
     duplicatedCount: diffRows.filter(r => r.bucket === 'duplicated').length,
     missingCount: diffRows.filter(r => r.bucket.startsWith('missing')).length,
-    anomalyCount: diffRows.filter(r => r.bucket === 'profit_anomaly').length
+    anomalyCount: diffRows.filter(r => r.bucket === 'profit_anomaly').length,
+    customCostCount: diffRows.filter(r => r.costSource === 'custom').length
   }
 
   const skuStats = buildSkuStats(jstOrders)

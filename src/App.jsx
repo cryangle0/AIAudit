@@ -3,15 +3,19 @@ import './App.css'
 import LoginPage from './components/LoginPage.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
-import ReconcileTab from './components/ReconcileTab.jsx'
-import SkuProfitTab from './components/SkuProfitTab.jsx'
+import DiffAnalyzePage from './pages/DiffAnalyzePage.jsx'
+import ProductCostPage from './pages/ProductCostPage.jsx'
+import ProductProfitPage from './pages/ProductProfitPage.jsx'
+import PlaceholderPage from './pages/PlaceholderPage.jsx'
 import { useReconcileStore } from './hooks/useReconcileStore.js'
 import { useSettings } from './hooks/useSettings.js'
+import { useProductCost } from './hooks/useProductCost.js'
 import { platformsById, MOCK_SHOPS } from './platforms/index.js'
 import { JST_SLOT } from './components/UploadZone.jsx'
 import { readWorkbook, validateColumns } from './utils/excel.js'
 import { parseJushuitan } from './core/jushuitan.js'
 import { runReconcile } from './core/reconcile.js'
+import { PAGE_META, DEFAULT_PAGE } from './core/menuStructure.js'
 
 async function pickFromBook(book, slot, platform, dispatch, fileLabel) {
   // 把 book 里所有匹配的 sheet 一次性塞进对应槽位（兼容含多 sheet 的样例文件）
@@ -64,6 +68,9 @@ async function pickFromBook(book, slot, platform, dispatch, fileLabel) {
 export default function App() {
   const { state, dispatch, login, logout } = useReconcileStore()
   const [settings, updateSettings, resetSettings] = useSettings()
+  const productCost = useProductCost()
+
+  const pageId = state.pageId || DEFAULT_PAGE
 
   useEffect(() => {
     document.body.classList.toggle('dark', state.darkMode)
@@ -72,7 +79,7 @@ export default function App() {
   // 设置变化导致当前选中的平台/店铺不可用时，自动切换到合法值
   useEffect(() => {
     const enabled = settings.enabledPlatforms
-    if (enabled.length === 0) return // UI 层禁止全部取消，不会到这里
+    if (enabled.length === 0) return
 
     let nextPid = state.platformId
     if (!enabled.includes(nextPid)) nextPid = enabled[0]
@@ -114,7 +121,6 @@ export default function App() {
   const onLoadSample = useCallback(async () => {
     if (!platform.sampleFileUrl) return
     try {
-      // 拼接 base URL 适配子路径部署（如 GitHub Pages /AIAudit/）
       const url = import.meta.env.BASE_URL + platform.sampleFileUrl.replace(/^\//, '')
       const resp = await fetch(url)
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
@@ -130,7 +136,6 @@ export default function App() {
 
   const onStart = useCallback(() => {
     dispatch({ type: 'RECONCILE_START' })
-    // 使用 requestAnimationFrame + setTimeout 确保 UI 先渲染"对账中…"状态
     requestAnimationFrame(() => {
       setTimeout(() => {
         try {
@@ -139,21 +144,25 @@ export default function App() {
           const jstRows = state.uploads.jst?.rows || []
           const platformResult = platform.transform({ fundRows, summaryRows })
           const jstOrders = parseJushuitan(jstRows)
-          const result = runReconcile(platformResult, jstOrders)
+          // 把当前期间的商品成本传给对账引擎
+          const result = runReconcile(platformResult, jstOrders, {
+            costItems: productCost.items,
+            period: state.month
+          })
           dispatch({ type: 'RECONCILE_DONE', result, warnings: [] })
         } catch (e) {
           dispatch({ type: 'RECONCILE_FAIL', error: '对账失败：' + e.message })
         }
       }, 50)
     })
-  }, [state.uploads, platform, dispatch])
+  }, [state.uploads, state.month, platform, dispatch, productCost.items])
 
   const onScopeChange = useCallback(scope => dispatch({ type: 'SELECT_SCOPE', ...scope }), [dispatch])
-  const onTabChange = useCallback(tab => dispatch({ type: 'SET_TAB', tab }), [dispatch])
+  const onPageChange = useCallback(p => dispatch({ type: 'SET_PAGE', pageId: p }), [dispatch])
+
   const onExport = useCallback(() => {
     if (!state.result) return
-    const head = ['订单号','款式','商品编码','销售收入','净入账','销售件数','成本','真实利润','系统毛利','毛利差','状态']
-    // CSV 安全：含逗号/引号/换行的字段需要用双引号包裹
+    const head = ['订单号','款式','商品编码','销售收入','净入账','销售件数','成本','成本来源','真实利润','系统毛利','毛利差','状态']
     const csvCell = v => {
       const s = String(v ?? '')
       return (s.includes(',') || s.includes('"') || s.includes('\n')) ? `"${s.replace(/"/g, '""')}"` : s
@@ -163,10 +172,11 @@ export default function App() {
       lines.push([
         csvCell(r.orderId), csvCell(r.styleCode || ''), csvCell(r.productCode || ''),
         r.saleRevenue, r.netSettled, r.qty || 0,
-        r.shippedCost, r.realProfit, r.systemProfit, r.profitDiff, r.bucket
+        r.shippedCost, r.costSource === 'custom' ? '自维护' : '聚水潭',
+        r.realProfit, r.systemProfit, r.profitDiff, r.bucket
       ].join(','))
     }
-    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url; a.download = `对账_${state.platformId}_${state.month}.csv`; a.click()
@@ -175,32 +185,51 @@ export default function App() {
 
   if (!state.authed) return <LoginPage onLogin={login}/>
 
-  return (
-    <div className="app-layout">
-      <Sidebar
-        platformId={state.platformId} shopId={state.shopId} month={state.month}
-        darkMode={state.darkMode}
-        settings={settings}
-        updateSettings={updateSettings}
-        resetSettings={resetSettings}
-        onScopeChange={onScopeChange}
-        onToggleDark={() => dispatch({ type: 'TOGGLE_DARK' })}
-        onLogout={logout}/>
-      <div className="main-area">
-        <TopBar
-          platformName={platform.name} shopName={shop?.name || ''} month={state.month}
-          activeTab={state.activeTab} onTabChange={onTabChange}
-          onExport={onExport} canExport={!!state.result}/>
-        {state.activeTab === 'reconcile' ? (
-          <ReconcileTab
+  // 当前页是否需要 TopBar 显示对账上下文
+  const isReconcileContextPage = ['diff-analyze', 'product-profit'].includes(pageId)
+
+  const renderPage = () => {
+    switch (pageId) {
+      case 'diff-analyze':
+        return (
+          <DiffAnalyzePage
             platform={platform} uploads={state.uploads}
             onPick={onPick} onClear={onClear} onStart={onStart}
             canStart={canStart} reconciling={state.reconciling}
             result={state.result} error={state.error} parseWarnings={state.parseWarnings}
             onLoadSample={onLoadSample}/>
-        ) : (
-          <SkuProfitTab result={state.result}/>
-        )}
+        )
+      case 'product-cost':
+        return <ProductCostPage currentPeriod={state.month}/>
+      case 'product-profit':
+        return <ProductProfitPage
+          result={state.result} costItems={productCost.items} currentPeriod={state.month}/>
+      default:
+        return <PlaceholderPage pageId={pageId}/>
+    }
+  }
+
+  return (
+    <div className="app-layout">
+      <Sidebar
+        pageId={pageId}
+        platformId={state.platformId} shopId={state.shopId} month={state.month}
+        darkMode={state.darkMode}
+        settings={settings}
+        updateSettings={updateSettings}
+        resetSettings={resetSettings}
+        onPageChange={onPageChange}
+        onScopeChange={onScopeChange}
+        onToggleDark={() => dispatch({ type: 'TOGGLE_DARK' })}
+        onLogout={logout}/>
+      <div className="main-area">
+        <TopBar
+          pageMeta={PAGE_META[pageId]}
+          showScope={isReconcileContextPage}
+          platformName={platform.name} shopName={shop?.name || ''} month={state.month}
+          onExport={onExport}
+          canExport={!!state.result && pageId === 'diff-analyze'}/>
+        {renderPage()}
       </div>
     </div>
   )

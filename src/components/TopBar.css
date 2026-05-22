@@ -10,6 +10,7 @@
 }
 .rec-topbar-title { font-size: var(--font-size-md); color: var(--text-primary); }
 .rec-topbar-title strong { color: var(--accent); }
+.rec-topbar-group { color: var(--text-muted); font-size: var(--font-size-sm); }
 .rec-topbar-sep { margin: 0 8px; color: var(--text-muted); }
 .rec-topbar-actions { display: flex; gap: 8px; }
 .rec-topbar-actions button {
