@@ -279,6 +279,7 @@ def build_docx(md_file, output_file):
 
 if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath(__file__))
-    md_file = os.path.join(here, '爱对-项目方案.md')
-    out_file = os.path.join(here, '爱对-项目方案.docx')
+    parent = os.path.dirname(here)  # 方案与报价 目录
+    md_file = os.path.join(parent, '爱对-项目方案.md')
+    out_file = os.path.join(parent, '爱对-项目方案.docx')
     build_docx(md_file, out_file)
