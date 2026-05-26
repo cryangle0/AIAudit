@@ -20,10 +20,11 @@ beforeEach(() => {
 })
 
 describe('DEFAULT_SETTINGS', () => {
-  it('contains all 7 platforms enabled by default', () => {
+  it('contains all 11 platforms enabled by default (7 domestic + 4 overseas)', () => {
     expect(DEFAULT_SETTINGS.enabledPlatforms).toEqual([
       'douyin', 'taobao', 'kuaishou', 'pinduoduo',
-      'xiaohongshu', 'shipinhao', 'weixin_xiaodian'
+      'xiaohongshu', 'shipinhao', 'weixin_xiaodian',
+      'ozon', 'wildberries', 'tiktok_uk', 'amazon_us'
     ])
   })
 

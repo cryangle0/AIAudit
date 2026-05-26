@@ -113,3 +113,101 @@ export const DEMO_KEY_METRICS = {
   totalProfit: 29780,       // 总毛利润
   profitRate: 0.7325        // 毛利率
 }
+
+
+// ============================================================================
+// 应收汇总表 — 店铺/商品维度
+// ============================================================================
+export const DEMO_RECV_SUMMARY = [
+  { shop: '雪中飞德煌童装专卖店', styleCode: 'X2501326322FXT', productCode: 'I568150018164', productName: '冬款保暖羽绒服',
+    openQty: 0, openAmount: 0, recvQty: 280, recvAmount: 50120.00,
+    writeoffQty: 265, writeoffAmount: 47436.05, endQty: 15, endAmount: 2683.95 },
+  { shop: '雪中飞德煌童装专卖店', styleCode: 'X2509329934FXT', productCode: 'I687014417827', productName: '春秋款卫衣',
+    openQty: 0, openAmount: 0, recvQty: 156, recvAmount: 10920.40,
+    writeoffQty: 156, writeoffAmount: 10374.40, endQty: 0, endAmount: 546.00 },
+  { shop: '雪中飞德煌童装专卖店', styleCode: 'X250138238FXT', productCode: 'H626415547402', productName: '童装连衣裙',
+    openQty: 0, openAmount: 0, recvQty: 89, recvAmount: 17711.00,
+    writeoffQty: 80, writeoffAmount: 15124.00, endQty: 9, endAmount: 2587.00 },
+  { shop: '雪中飞德煌童装专卖店', styleCode: 'X2501324376FXT', productCode: 'I180814417600', productName: '童装毛衣',
+    openQty: 12, openAmount: 2148.00, recvQty: 67, recvAmount: 11993.00,
+    writeoffQty: 70, writeoffAmount: 12530.00, endQty: 9, endAmount: 1611.00 }
+]
+
+// ============================================================================
+// 应收明细表 — 订单级
+// ============================================================================
+export const DEMO_RECV_DETAIL = [
+  { period: '2026-01', shop: '雪中飞德煌童装专卖店', orderId: '6950156655091651754', styleCode: 'X2501326322FXT', productCode: 'I568150018164', productName: '冬款保暖羽绒服',
+    openQty: 0, openAmount: 0, recvQty: 1, recvAmount: 179.00, writeoffQty: 1, writeoffAmount: 170.05, endQty: 0, endAmount: 8.95, bucket: 'matched' },
+  { period: '2026-01', shop: '雪中飞德煌童装专卖店', orderId: '6950144136995607613', styleCode: 'X2509329934FXT', productCode: 'I687014417827', productName: '春秋款卫衣',
+    openQty: 0, openAmount: 0, recvQty: 1, recvAmount: 69.90, writeoffQty: 1, writeoffAmount: 66.40, endQty: 0, endAmount: 3.50, bucket: 'matched' },
+  { period: '2026-01', shop: '雪中飞德煌童装专卖店', orderId: '6923805849049201907', styleCode: 'X250138238FXT', productCode: 'H626415547402', productName: '童装连衣裙',
+    openQty: 0, openAmount: 0, recvQty: 1, recvAmount: 199.00, writeoffQty: 1, writeoffAmount: 189.05, endQty: 0, endAmount: 9.95, bucket: 'matched' },
+  { period: '2026-01', shop: '雪中飞德煌童装专卖店', orderId: '6924339045381930971', styleCode: 'X2501324376FXT', productCode: 'I180814417600', productName: '童装毛衣',
+    openQty: 1, openAmount: 179.00, recvQty: 0, recvAmount: 0, writeoffQty: 1, writeoffAmount: 170.05, endQty: 0, endAmount: 8.95, bucket: 'matched' }
+]
+
+// ============================================================================
+// 利润分析表 — 多维度
+// ============================================================================
+export const DEMO_PROFIT_ANALYZE = {
+  sku: [
+    { styleCode: 'X2501326322FXT', productName: '冬款保暖羽绒服', shop: '雪中飞德煌童装专卖店',
+      qty: 280, revenue: 50120, cost: 24276, fee: 2506, profit: 23338,
+      profitRate: 0.466 },
+    { styleCode: 'X2509329934FXT', productName: '春秋款卫衣', shop: '雪中飞德煌童装专卖店',
+      qty: 156, revenue: 10920, cost: 4680, fee: 546, profit: 5694,
+      profitRate: 0.521 },
+    { styleCode: 'X250138238FXT',  productName: '童装连衣裙', shop: '雪中飞德煌童装专卖店',
+      qty: 89, revenue: 17711, cost: 9372, fee: 886, profit: 7453,
+      profitRate: 0.421 },
+    { styleCode: 'X2501324376FXT', productName: '童装毛衣', shop: '雪中飞德煌童装专卖店',
+      qty: 67, revenue: 11993, cost: 5159, fee: 600, profit: 6234,
+      profitRate: 0.520 }
+  ],
+  byShop: [
+    { key: '雪中飞德煌童装专卖店', qty: 592, revenue: 90744, cost: 43487, fee: 4538, profit: 42719, profitRate: 0.471 }
+  ],
+  byPlatform: [
+    { key: 'douyin', qty: 592, revenue: 90744, cost: 43487, fee: 4538, profit: 42719, profitRate: 0.471 }
+  ],
+  byCategory: [
+    { key: '童装外套', qty: 369, revenue: 67831, cost: 33648, fee: 3392, profit: 30791, profitRate: 0.454 },
+    { key: '童装连衣裙', qty: 89,  revenue: 17711, cost: 9372,  fee: 886,  profit: 7453,  profitRate: 0.421 },
+    { key: '童装毛衣',  qty: 67,  revenue: 11993, cost: 5159,  fee: 600,  profit: 6234,  profitRate: 0.520 },
+    { key: '童装卫衣',  qty: 156, revenue: 10920, cost: 4680,  fee: 546,  profit: 5694,  profitRate: 0.521 }
+  ]
+}
+
+// ============================================================================
+// 数据分配 — 演示分配明细
+// ============================================================================
+export const DEMO_ALLOCATION = {
+  allocations: [
+    { id: 'a1', feeType: '推广费', platformOrderId: '6950156655091651754', styleCode: 'X2501326322FXT',
+      amount: 2.50, ratio: 0.025, basisField: 'saleRevenue', standardName: '推广费按收入分摊', level: 'sku' },
+    { id: 'a2', feeType: '推广费', platformOrderId: '6950144136995607613', styleCode: 'X2509329934FXT',
+      amount: 1.25, ratio: 0.0125, basisField: 'saleRevenue', standardName: '推广费按收入分摊', level: 'sku' },
+    { id: 'a3', feeType: '运费险', platformOrderId: '6950156655091651754', styleCode: 'X2501326322FXT',
+      amount: 1.00, ratio: 0.01, basisField: 'orderCount', standardName: '运费险按订单数分摊', level: 'sku' },
+    { id: 'a4', feeType: '红包', platformOrderId: '6923805849049201907', styleCode: 'X250138238FXT',
+      amount: 0.80, ratio: 0.008, basisField: 'saleRevenue', standardName: '红包/补贴按收入分摊', level: 'sku' },
+    { id: 'a5', feeType: '平台服务费', platformOrderId: '6924339045381930971', styleCode: 'X2501324376FXT',
+      amount: 8.95, ratio: 1, basisField: 'directOrder', standardName: '直挂订单', level: 'sku' }
+  ],
+  summary: {
+    totalFees: 14.50, allocated: 14.50, unallocated: 0, unmatchedReasons: {},
+    byOrg: [{ key: 'default', count: 5, amount: 14.50, byFeeType: { '推广费': 3.75, '运费险': 1.00, '红包': 0.80, '平台服务费': 8.95 } }],
+    byShop: [{ key: '雪中飞德煌童装专卖店', count: 5, amount: 14.50, byFeeType: { '推广费': 3.75, '运费险': 1.00, '红包': 0.80, '平台服务费': 8.95 } }],
+    bySku: [
+      { key: 'X2501326322FXT', count: 2, amount: 3.50, byFeeType: { '推广费': 2.50, '运费险': 1.00 } },
+      { key: 'X2509329934FXT', count: 1, amount: 1.25, byFeeType: { '推广费': 1.25 } },
+      { key: 'X250138238FXT',  count: 1, amount: 0.80, byFeeType: { '红包': 0.80 } },
+      { key: 'X2501324376FXT', count: 1, amount: 8.95, byFeeType: { '平台服务费': 8.95 } }
+    ],
+    byOrder: [
+      { key: '6950156655091651754', count: 2, amount: 3.50, byFeeType: { '推广费': 2.50, '运费险': 1.00 } },
+      { key: '6924339045381930971', count: 1, amount: 8.95, byFeeType: { '平台服务费': 8.95 } }
+    ]
+  }
+}

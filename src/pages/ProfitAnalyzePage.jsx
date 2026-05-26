@@ -1,10 +1,12 @@
-// 利润分析表 — 多维度（部门/平台/品类/店铺/商品）
+// 利润分析表 — 多维度
 
 import { useMemo, useState } from 'react'
-import { AlertCircle } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { fmtMoney, fmtNumber, fmtPct } from '../utils/format.js'
 import { runAllocation } from '../core/allocate.js'
 import { buildProfitAnalyze } from '../core/reportBuilder.js'
+import { DEMO_PROFIT_ANALYZE } from '../core/demoData.js'
+import PageHeader from '../components/common/PageHeader.jsx'
 import './pages.css'
 
 const DIMENSIONS = [
@@ -18,8 +20,9 @@ export default function ProfitAnalyzePage({
   reconcileResult, feeRecords, allocStandards, costItems, period, platformId, shopName
 }) {
   const [dim, setDim] = useState('sku')
+  const [useDemo, setUseDemo] = useState(false)
 
-  const data = useMemo(() => {
+  const realData = useMemo(() => {
     if (!reconcileResult) return null
     const allocResult = runAllocation({
       feeRecords, standards: allocStandards, reconcileResult, period
@@ -29,40 +32,28 @@ export default function ProfitAnalyzePage({
     })
   }, [reconcileResult, feeRecords, allocStandards, costItems, period, platformId, shopName])
 
-  if (!reconcileResult) {
-    return (
-      <div className="rec-page">
-        <div className="rec-page-head">
-          <h2>利润分析表</h2>
-          <div className="rec-page-sub">多维度利润分析：部门/平台/品类/店铺/商品。</div>
-        </div>
-        <div className="rec-placeholder">
-          <AlertCircle size={28}/>
-          <h3>请先完成对账</h3>
-          <p>到「差异分析表」上传账单并对账，再到「数据归集」录入本期费用，即可生成多维度利润分析。</p>
-        </div>
-      </div>
-    )
-  }
+  const showDemo = !reconcileResult || useDemo
+  const data = showDemo ? DEMO_PROFIT_ANALYZE : realData
 
-  const rows = dim === 'sku'
-    ? data.sku
-    : data[dim]
-  const totals = rows.reduce((acc, r) => {
-    acc.qty += r.qty || 0; acc.revenue += r.revenue
-    acc.cost += r.cost; acc.fee += r.fee; acc.profit += r.profit
-    return acc
-  }, { qty: 0, revenue: 0, cost: 0, fee: 0, profit: 0 })
+  const rows = dim === 'sku' ? data.sku : data[dim]
+  const totals = rows.reduce((acc, r) => ({
+    qty: acc.qty + (r.qty || 0), revenue: acc.revenue + r.revenue,
+    cost: acc.cost + r.cost, fee: acc.fee + r.fee, profit: acc.profit + r.profit
+  }), { qty: 0, revenue: 0, cost: 0, fee: 0, profit: 0 })
 
   return (
     <div className="rec-page">
-      <div className="rec-page-head">
-        <h2>利润分析表</h2>
-        <div className="rec-page-sub">
-          多维度利润分析。利润 = 销售收入 − 参考成本 − 分配费用。
-          参考成本优先取自维护商品成本，分配费用来自分配引擎。
+      <PageHeader title="利润分析表"
+        subtitle="多维度利润分析（部门/平台/品类/店铺/商品）。利润 = 销售收入 − 参考成本 − 分配费用"/>
+
+      {showDemo && (
+        <div className="rec-demo-banner">
+          <Sparkles size={14}/>
+          <span>当前显示演示数据。</span>
+          {!reconcileResult ? <span>到「差异分析表」上传账单并对账后将自动生成真实数据。</span>
+            : <button className="rec-link-btn" onClick={() => setUseDemo(false)}>切换到真实数据</button>}
         </div>
-      </div>
+      )}
 
       <div className="rec-kpi-grid rec-kpi-grid-4">
         <div className="rec-kpi-card tone-neutral">
@@ -90,6 +81,12 @@ export default function ProfitAnalyzePage({
           <button key={d.id} className={`rec-pill ${dim === d.id ? 'active' : ''}`}
             onClick={() => setDim(d.id)}>{d.label}</button>
         ))}
+        <span className="rec-spacer"/>
+        {!showDemo && reconcileResult && (
+          <button className="rec-btn" onClick={() => setUseDemo(true)}>
+            <Sparkles size={14}/> 查看演示数据
+          </button>
+        )}
       </div>
 
       <div className="rec-table-card">

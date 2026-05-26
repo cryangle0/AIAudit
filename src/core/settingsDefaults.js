@@ -2,8 +2,11 @@ export const STORAGE_KEY = 'ai-reconcile.settings'
 
 export const DEFAULT_SETTINGS = {
   enabledPlatforms: [
+    // 国内
     'douyin', 'taobao', 'kuaishou', 'pinduoduo',
-    'xiaohongshu', 'shipinhao', 'weixin_xiaodian'
+    'xiaohongshu', 'shipinhao', 'weixin_xiaodian',
+    // 海外（需求 #6）
+    'ozon', 'wildberries', 'tiktok_uk', 'amazon_us'
   ],
   customShops: {},
   dataSource: {

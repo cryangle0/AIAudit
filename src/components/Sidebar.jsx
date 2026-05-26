@@ -1,5 +1,5 @@
 import { ChevronRight, ChevronDown, Moon, Sun, LogOut, Settings, Calendar,
-  Calculator, FileBarChart } from 'lucide-react'
+  Calculator, FileBarChart, Package, DollarSign, Store, Cog } from 'lucide-react'
 import { useState } from 'react'
 import { PLATFORMS, MOCK_SHOPS } from '../platforms/index.js'
 import { MENU_GROUPS } from '../core/menuStructure.js'
@@ -19,8 +19,12 @@ function formatMonth(m) {
 const MONTH_SELECT_OPTIONS = MONTH_OPTIONS.map(m => ({ value: m, label: formatMonth(m) }))
 
 const GROUP_ICON = {
+  'product-mgmt':  Package,
   'profit-center': Calculator,
-  'reports': FileBarChart
+  'reports':       FileBarChart,
+  'fx-mgmt':       DollarSign,
+  'shop-mgmt':     Store,
+  'system':        Cog
 }
 
 export default function Sidebar({
@@ -28,10 +32,10 @@ export default function Sidebar({
   settings, updateSettings, resetSettings,
   onPageChange, onScopeChange, onToggleDark, onLogout
 }) {
-  // 默认两个模块都展开；店铺/平台子菜单按当前选中展开
-  const [expandedGroups, setExpandedGroups] = useState({
-    'profit-center': true, 'reports': true
-  })
+  // 默认所有模块都展开；店铺/平台子菜单按当前选中展开
+  const [expandedGroups, setExpandedGroups] = useState(
+    Object.fromEntries(MENU_GROUPS.map(g => [g.id, true]))
+  )
   const [expandedShop, setExpandedShop] = useState(() =>
     Object.fromEntries(PLATFORMS.map(p => [p.id, p.id === platformId])))
   const [scopeOpen, setScopeOpen] = useState(true)

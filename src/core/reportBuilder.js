@@ -167,7 +167,8 @@ export function buildShopProfitFromReconcile({
 // 商品利润表 — 按客户 Excel 真实表头（订单级）
 // ============================================================================
 export function buildProductProfitFromReconcile({
-  reconcileResult, costItems = [], feeRecords = [], allocStandards = [], period, shopName
+  reconcileResult, costItems = [], feeRecords = [], allocStandards = [], period, shopName,
+  productMaster = []
 }) {
   const diffRows = reconcileResult?.diffRows || []
 
@@ -181,12 +182,18 @@ export function buildProductProfitFromReconcile({
     allocByOrder.set(a.platformOrderId, (allocByOrder.get(a.platformOrderId) || 0) + a.amount)
   }
 
+  // 商品资料索引（用于查 category）
+  const masterByCode = new Map()
+  for (const m of productMaster) {
+    if (m.styleCode) masterByCode.set('s|' + m.styleCode, m)
+    if (m.productCode) masterByCode.set('p|' + m.productCode, m)
+  }
+
   return diffRows.map(r => {
     const qty = r.qty || 0
     const revenue = r.saleRevenue || 0
     const price = qty > 0 ? revenue / qty : 0
 
-    // 成本：自维护 → 聚水潭兜底
     const c = (costItems || []).find(x =>
       x.period === period && (x.styleCode === r.styleCode || x.productCode === r.productCode))
     const cost = c ? num(c.baseCost) * qty : (r.shippedCost || 0)
@@ -197,13 +204,17 @@ export function buildProductProfitFromReconcile({
     const profit = revenue - cost - tagFee - accessoryFee - allocFee
     const profitRate = revenue > 0 ? profit / revenue : 0
 
+    // 品类：优先从商品资料里查
+    const master = masterByCode.get('s|' + r.styleCode) || masterByCode.get('p|' + r.productCode)
+    const category = master?.category || '—'
+
     return {
       shopName: shopName || '-',
       orderId: r.orderId,
       styleCode: r.styleCode || '—',
       productCode: r.productCode || '—',
-      productName: r.productName || '—',
-      category: '—',
+      productName: master?.productName || r.productName || '—',
+      category,
       qty, price, revenue,
       cost, tagFee, accessoryFee,
       profit, profitRate,

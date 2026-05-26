@@ -1,38 +1,55 @@
-// 应收汇总表 — 店铺/商品维度，期初+应收+核销+期末（数量+金额）
+// 应收汇总表 — 店铺/商品维度
+// 期初+应收+核销+期末（数量+金额）
 
-import { useMemo } from 'react'
-import { AlertCircle } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Sparkles } from 'lucide-react'
 import { fmtMoney, fmtNumber } from '../utils/format.js'
 import { buildRecvSummary } from '../core/reportBuilder.js'
+import { DEMO_RECV_SUMMARY } from '../core/demoData.js'
+import PageHeader from '../components/common/PageHeader.jsx'
 import './pages.css'
 
 export default function RecvSummaryPage({ reconcileResult, shopName }) {
-  const rows = useMemo(() => {
+  const [useDemo, setUseDemo] = useState(false)
+
+  const realRows = useMemo(() => {
     if (!reconcileResult) return []
     return buildRecvSummary({ reconcileResult, shopName })
   }, [reconcileResult, shopName])
 
-  if (!reconcileResult) {
-    return <EmptyState/>
-  }
+  const showDemo = !reconcileResult || useDemo
+  const rows = showDemo ? DEMO_RECV_SUMMARY : realRows
 
-  const totals = rows.reduce((acc, r) => {
-    acc.openQty += r.openQty; acc.openAmount += r.openAmount
-    acc.recvQty += r.recvQty; acc.recvAmount += r.recvAmount
-    acc.writeoffQty += r.writeoffQty; acc.writeoffAmount += r.writeoffAmount
-    acc.endQty += r.endQty; acc.endAmount += r.endAmount
-    return acc
-  }, { openQty: 0, openAmount: 0, recvQty: 0, recvAmount: 0,
+  const totals = rows.reduce((acc, r) => ({
+    openQty: acc.openQty + r.openQty, openAmount: acc.openAmount + r.openAmount,
+    recvQty: acc.recvQty + r.recvQty, recvAmount: acc.recvAmount + r.recvAmount,
+    writeoffQty: acc.writeoffQty + r.writeoffQty, writeoffAmount: acc.writeoffAmount + r.writeoffAmount,
+    endQty: acc.endQty + r.endQty, endAmount: acc.endAmount + r.endAmount
+  }), { openQty: 0, openAmount: 0, recvQty: 0, recvAmount: 0,
        writeoffQty: 0, writeoffAmount: 0, endQty: 0, endAmount: 0 })
 
   return (
     <div className="rec-page">
-      <div className="rec-page-head">
-        <h2>应收汇总表</h2>
-        <div className="rec-page-sub">
-          汇总维度-店铺/商品。期初结余 → 本期应收 → 本期核销 → 期末结余（数量 + 金额）。
+      <PageHeader title="应收汇总表"
+        subtitle="汇总维度-店铺/商品。期初结余 → 本期应收 → 本期核销 → 期末结余（数量 + 金额）"/>
+
+      {showDemo && (
+        <div className="rec-demo-banner">
+          <Sparkles size={14}/>
+          <span>当前显示演示数据（按客户模板典型形态）。</span>
+          {!reconcileResult ? <span>完成对账后将生成真实数据。</span>
+            : <button className="rec-link-btn" onClick={() => setUseDemo(false)}>切换到真实数据</button>}
         </div>
-      </div>
+      )}
+
+      {!showDemo && reconcileResult && (
+        <div className="rec-toolbar">
+          <span className="rec-spacer"/>
+          <button className="rec-btn" onClick={() => setUseDemo(true)}>
+            <Sparkles size={14}/> 查看演示数据
+          </button>
+        </div>
+      )}
 
       <div className="rec-table-card">
         <table className="rec-data-table">
@@ -54,8 +71,8 @@ export default function RecvSummaryPage({ reconcileResult, shopName }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map(r => (
-              <tr key={`${r.shop}|${r.styleCode}`}>
+            {rows.map((r, i) => (
+              <tr key={i}>
                 <td>{r.shop}</td>
                 <td className="mono">{r.styleCode}</td>
                 <td>{r.productName}</td>
@@ -78,24 +95,6 @@ export default function RecvSummaryPage({ reconcileResult, shopName }) {
             </tr>
           </tfoot>
         </table>
-      </div>
-    </div>
-  )
-}
-
-function EmptyState() {
-  return (
-    <div className="rec-page">
-      <div className="rec-page-head">
-        <h2>应收汇总表</h2>
-        <div className="rec-page-sub">
-          汇总维度-店铺/商品。期初 → 本期应收 → 本期核销 → 期末（数量+金额）。
-        </div>
-      </div>
-      <div className="rec-placeholder">
-        <AlertCircle size={28}/>
-        <h3>请先完成对账</h3>
-        <p>到「差异分析表」上传账单并对账后自动生成本表。</p>
       </div>
     </div>
   )

@@ -285,6 +285,7 @@ export default function App() {
         return <ProductProfitPage reconcileResult={state.result} costItems={productCost.items}
           currentPeriod={state.month}
           feeRecords={feeRecords.items} allocStandards={allocStandards.items}
+          productMaster={productMaster.items}
           shopName={shop?.name || ''}/>
 
       // 汇率管理

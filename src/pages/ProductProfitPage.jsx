@@ -11,16 +11,17 @@ import { DEMO_PRODUCT_PROFIT, DEMO_MONTHLY_STATS, DEMO_KEY_METRICS } from '../co
 import './pages.css'
 
 export default function ProductProfitPage({
-  reconcileResult, costItems, currentPeriod, feeRecords, allocStandards, shopName
+  reconcileResult, costItems, currentPeriod, feeRecords, allocStandards, shopName, productMaster
 }) {
   const [useDemo, setUseDemo] = useState(false)
 
   const realRows = useMemo(() => {
     if (!reconcileResult) return []
     return buildProductProfitFromReconcile({
-      reconcileResult, costItems, feeRecords, allocStandards, period: currentPeriod, shopName
+      reconcileResult, costItems, feeRecords, allocStandards, period: currentPeriod, shopName,
+      productMaster
     })
-  }, [reconcileResult, costItems, feeRecords, allocStandards, currentPeriod, shopName])
+  }, [reconcileResult, costItems, feeRecords, allocStandards, currentPeriod, shopName, productMaster])
 
   const showDemo = !reconcileResult || useDemo
   const rows = showDemo ? DEMO_PRODUCT_PROFIT : realRows

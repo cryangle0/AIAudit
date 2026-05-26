@@ -1,48 +1,58 @@
 // 应收明细表 — 订单级
 
 import { useMemo, useState } from 'react'
-import { AlertCircle } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { fmtMoney, fmtNumber } from '../utils/format.js'
 import { buildRecvDetail } from '../core/reportBuilder.js'
+import { DEMO_RECV_DETAIL } from '../core/demoData.js'
+import PageHeader from '../components/common/PageHeader.jsx'
 import './pages.css'
 
 export default function RecvDetailPage({ reconcileResult, shopName, period }) {
   const [search, setSearch] = useState('')
+  const [useDemo, setUseDemo] = useState(false)
 
-  const rows = useMemo(() => {
+  const realRows = useMemo(() => {
     if (!reconcileResult) return []
     return buildRecvDetail({ reconcileResult, shopName, period })
   }, [reconcileResult, shopName, period])
 
-  if (!reconcileResult) {
-    return <Empty/>
-  }
-
+  const showDemo = !reconcileResult || useDemo
+  const baseRows = showDemo ? DEMO_RECV_DETAIL : realRows
   const filtered = search
-    ? rows.filter(r => r.orderId?.includes(search) || r.styleCode?.includes(search))
-    : rows
+    ? baseRows.filter(r => r.orderId?.includes(search) || r.styleCode?.includes(search))
+    : baseRows
   const visible = filtered.slice(0, 500)
 
-  const totals = filtered.reduce((acc, r) => {
-    acc.recvQty += r.recvQty; acc.recvAmount += r.recvAmount
-    acc.writeoffQty += r.writeoffQty; acc.writeoffAmount += r.writeoffAmount
-    acc.endQty += r.endQty; acc.endAmount += r.endAmount
-    return acc
-  }, { recvQty: 0, recvAmount: 0, writeoffQty: 0, writeoffAmount: 0, endQty: 0, endAmount: 0 })
+  const totals = filtered.reduce((acc, r) => ({
+    recvQty: acc.recvQty + r.recvQty, recvAmount: acc.recvAmount + r.recvAmount,
+    writeoffQty: acc.writeoffQty + r.writeoffQty, writeoffAmount: acc.writeoffAmount + r.writeoffAmount,
+    endQty: acc.endQty + r.endQty, endAmount: acc.endAmount + r.endAmount
+  }), { recvQty: 0, recvAmount: 0, writeoffQty: 0, writeoffAmount: 0, endQty: 0, endAmount: 0 })
 
   return (
     <div className="rec-page">
-      <div className="rec-page-head">
-        <h2>应收明细表</h2>
-        <div className="rec-page-sub">
-          明细维度-订单/商品。期初结余 → 本期应收 → 本期核销 → 期末结余（数量 + 金额）。
+      <PageHeader title="应收明细表"
+        subtitle="明细维度-订单/商品。期初 → 本期应收 → 本期核销 → 期末（数量 + 金额）"/>
+
+      {showDemo && (
+        <div className="rec-demo-banner">
+          <Sparkles size={14}/>
+          <span>当前显示演示数据。</span>
+          {!reconcileResult ? <span>完成对账后将生成真实数据。</span>
+            : <button className="rec-link-btn" onClick={() => setUseDemo(false)}>切换到真实数据</button>}
         </div>
-      </div>
+      )}
 
       <div className="rec-toolbar">
         <input className="rec-input" placeholder="搜索 订单号/款式编码"
           value={search} onChange={e => setSearch(e.target.value)}/>
         <span className="rec-spacer"/>
+        {!showDemo && reconcileResult && (
+          <button className="rec-btn" onClick={() => setUseDemo(true)}>
+            <Sparkles size={14}/> 查看演示数据
+          </button>
+        )}
         <span className="rec-muted">{filtered.length} 条{filtered.length > 500 ? '（仅显示前 500）' : ''}</span>
       </div>
 
@@ -84,21 +94,6 @@ export default function RecvDetailPage({ reconcileResult, shopName, period }) {
             </tr>
           </tfoot>
         </table>
-      </div>
-    </div>
-  )
-}
-
-function Empty() {
-  return (
-    <div className="rec-page">
-      <div className="rec-page-head">
-        <h2>应收明细表</h2>
-      </div>
-      <div className="rec-placeholder">
-        <AlertCircle size={28}/>
-        <h3>请先完成对账</h3>
-        <p>到「差异分析表」上传账单并对账后自动生成本表。</p>
       </div>
     </div>
   )
