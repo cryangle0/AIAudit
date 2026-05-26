@@ -2,7 +2,7 @@
 // 列：店铺名称 | 销售收入(销售收入·无售后或售后取消·退款金额·销售净收入)
 //   | 销售成本(发货数量·退货数量·商品成本·标费成本·辅料成本·快递成本·成本合计)
 //   | 销售费用(平台服务费·佣金·推广费·运费险·红包·补贴·费用合计)
-//   | 店铺利润 | 毛利率 | 退货率
+//   | 店铺利润 | 毛利率 | 退货率 | 确收率（需求 #15 新增）
 
 import { useMemo, useState } from 'react'
 import { Sparkles } from 'lucide-react'
@@ -83,6 +83,7 @@ export default function ShopProfitPage({ reconcileResult, shopName, costItems, f
               <th rowSpan={2}>店铺利润</th>
               <th rowSpan={2}>毛利率</th>
               <th rowSpan={2}>退货率</th>
+              <th rowSpan={2}>确收率</th>
             </tr>
             <tr>
               <th>销售收入</th><th>无售后或售后取消</th><th>退款金额</th><th>销售净收入</th>
@@ -115,6 +116,7 @@ export default function ShopProfitPage({ reconcileResult, shopName, costItems, f
                 <td className={r.profit < 0 ? 'neg' : 'pos'}><strong>{fmtMoney(r.profit)}</strong></td>
                 <td>{fmtPct(r.profitRate)}</td>
                 <td>{fmtPct(r.returnRate)}</td>
+                <td>{fmtPct(r.confirmRate)}</td>
               </tr>
             ))}
           </tbody>
@@ -141,6 +143,7 @@ export default function ShopProfitPage({ reconcileResult, shopName, costItems, f
               <td className="neg">{fmtMoney(totals.feeTotal)}</td>
               <td className={totals.profit < 0 ? 'neg' : 'pos'}>{fmtMoney(totals.profit)}</td>
               <td>{fmtPct(totals.netRevenue ? totals.profit / totals.netRevenue : 0)}</td>
+              <td>—</td>
               <td>—</td>
             </tr>
           </tfoot>

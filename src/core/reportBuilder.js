@@ -151,13 +151,15 @@ export function buildShopProfitFromReconcile({
   const profit = netRevenue - costTotal - feeTotal
   const profitRate = netRevenue > 0 ? profit / netRevenue : 0
   const returnRate = (shippedQty + returnedQty) > 0 ? returnedQty / (shippedQty + returnedQty) : 0
+  // 确收率：实际净到账 / 销售收入（销售总额中真正确收的比例）
+  const confirmRate = revenue > 0 ? netRevenue / revenue : 0
 
   return {
     shopName: shopName || '-',
     revenue, noAfterSale, refund, netRevenue,
     shippedQty, returnedQty, productCost, tagCost, accessoryCost, shippingCost, costTotal,
     platformFee, commission, promoFee, insurance, redPacket, subsidy, feeTotal,
-    profit, profitRate, returnRate
+    profit, profitRate, returnRate, confirmRate
   }
 }
 

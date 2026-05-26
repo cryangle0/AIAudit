@@ -3,9 +3,11 @@ import './App.css'
 import LoginPage from './components/LoginPage.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import TopBar from './components/TopBar.jsx'
+// 报表/对账页
 import DiffAnalyzePage from './pages/DiffAnalyzePage.jsx'
 import ProductCostPage from './pages/ProductCostPage.jsx'
 import ProductProfitPage from './pages/ProductProfitPage.jsx'
+import ShopProfitPage from './pages/ShopProfitPage.jsx'
 import DataAggregatePage from './pages/DataAggregatePage.jsx'
 import AllocStandardPage from './pages/AllocStandardPage.jsx'
 import DataAllocatePage from './pages/DataAllocatePage.jsx'
@@ -14,22 +16,33 @@ import RecvSummaryPage from './pages/RecvSummaryPage.jsx'
 import RecvDetailPage from './pages/RecvDetailPage.jsx'
 import BillSummaryPage from './pages/BillSummaryPage.jsx'
 import BillDetailPage from './pages/BillDetailPage.jsx'
-import ShopProfitPage from './pages/ShopProfitPage.jsx'
 import PlaceholderPage from './pages/PlaceholderPage.jsx'
+// 新模块
+import ProductMasterPage from './pages/product/ProductMasterPage.jsx'
+import CostHistoryPage from './pages/product/CostHistoryPage.jsx'
+import FxRatesPage from './pages/fx/FxRatesPage.jsx'
+import ShopProfilesPage from './pages/shop/ShopProfilesPage.jsx'
+import SystemPlaceholder from './pages/system/SystemPlaceholder.jsx'
+// hooks
 import { useReconcileStore } from './hooks/useReconcileStore.js'
 import { useSettings } from './hooks/useSettings.js'
 import { useProductCost } from './hooks/useProductCost.js'
 import { useFeeRecords } from './hooks/useFeeRecords.js'
 import { useAllocStandards } from './hooks/useAllocStandards.js'
+import { useExchangeRates } from './hooks/useExchangeRates.js'
+import { useCostHistory } from './hooks/useCostHistory.js'
+import { useShopProfiles } from './hooks/useShopProfiles.js'
+import { useProductMaster } from './hooks/useProductMaster.js'
+// core
 import { platformsById, MOCK_SHOPS } from './platforms/index.js'
 import { JST_SLOT } from './components/UploadZone.jsx'
 import { readWorkbook, validateColumns } from './utils/excel.js'
 import { parseJushuitan } from './core/jushuitan.js'
 import { runReconcile } from './core/reconcile.js'
 import { PAGE_META, DEFAULT_PAGE } from './core/menuStructure.js'
+import { exportSheets } from './utils/excelExport.js'
 
 async function pickFromBook(book, slot, platform, dispatch, fileLabel) {
-  // 把 book 里所有匹配的 sheet 一次性塞进对应槽位（兼容含多 sheet 的样例文件）
   const allSlotMap = {}
   for (const s of platform.uploadSlots) allSlotMap[s.sheetName] = s
   allSlotMap[JST_SLOT.sheetName] = JST_SLOT
@@ -44,8 +57,6 @@ async function pickFromBook(book, slot, platform, dispatch, fileLabel) {
       }
     }
   }
-
-  // 聚水潭模糊匹配：如果精确 sheet 名没命中 JST 槽位，尝试找包含必需列的 sheet
   const jstStuffed = stuffed && book[JST_SLOT.sheetName] &&
     validateColumns(book[JST_SLOT.sheetName], JST_SLOT.requiredColumns).length === 0
   if (!jstStuffed) {
@@ -60,7 +71,6 @@ async function pickFromBook(book, slot, platform, dispatch, fileLabel) {
       }
     }
   }
-
   if (stuffed) return
 
   const rows = book[slot.sheetName] || Object.values(book)[0]
@@ -82,6 +92,10 @@ export default function App() {
   const productCost = useProductCost()
   const feeRecords = useFeeRecords()
   const allocStandards = useAllocStandards()
+  const exchangeRates = useExchangeRates()
+  const costHistory = useCostHistory()
+  const shopProfiles = useShopProfiles()
+  const productMaster = useProductMaster()
 
   const pageId = state.pageId || DEFAULT_PAGE
 
@@ -89,14 +103,11 @@ export default function App() {
     document.body.classList.toggle('dark', state.darkMode)
   }, [state.darkMode])
 
-  // 设置变化导致当前选中的平台/店铺不可用时，自动切换到合法值
   useEffect(() => {
     const enabled = settings.enabledPlatforms
     if (enabled.length === 0) return
-
     let nextPid = state.platformId
     if (!enabled.includes(nextPid)) nextPid = enabled[0]
-
     const allShops = [
       ...(MOCK_SHOPS[nextPid] || []),
       ...(settings.customShops[nextPid] || [])
@@ -104,7 +115,6 @@ export default function App() {
     const ids = allShops.map(s => s.id)
     let nextSid = state.shopId
     if (!ids.includes(nextSid)) nextSid = allShops[0]?.id
-
     if (nextPid !== state.platformId || nextSid !== state.shopId) {
       dispatch({ type: 'SELECT_SCOPE', platformId: nextPid, shopId: nextSid, month: state.month })
     }
@@ -132,7 +142,10 @@ export default function App() {
   const onClear = useCallback(slot => dispatch({ type: 'CLEAR_UPLOAD', key: slot.key }), [dispatch])
 
   const onLoadSample = useCallback(async () => {
-    if (!platform.sampleFileUrl) return
+    if (!platform.sampleFileUrl) {
+      dispatch({ type: 'RECONCILE_FAIL', error: `${platform.name} 暂无演示数据，请上传真实账单或切换至有演示数据的平台（如抖音）。` })
+      return
+    }
     try {
       const url = import.meta.env.BASE_URL + platform.sampleFileUrl.replace(/^\//, '')
       const resp = await fetch(url)
@@ -157,7 +170,6 @@ export default function App() {
           const jstRows = state.uploads.jst?.rows || []
           const platformResult = platform.transform({ fundRows, summaryRows })
           const jstOrders = parseJushuitan(jstRows)
-          // 把当前期间的商品成本传给对账引擎
           const result = runReconcile(platformResult, jstOrders, {
             costItems: productCost.items,
             period: state.month
@@ -175,30 +187,49 @@ export default function App() {
 
   const onExport = useCallback(() => {
     if (!state.result) return
-    const head = ['订单号','款式','商品编码','销售收入','净入账','销售件数','成本','成本来源','真实利润','系统毛利','毛利差','状态']
-    const csvCell = v => {
-      const s = String(v ?? '')
-      return (s.includes(',') || s.includes('"') || s.includes('\n')) ? `"${s.replace(/"/g, '""')}"` : s
+    exportSheets([{
+      name: '差异分析',
+      columns: [
+        { key: 'orderId', label: '订单号', width: 22 },
+        { key: 'styleCode', label: '款式', width: 20 },
+        { key: 'productCode', label: '商品编码', width: 22 },
+        { key: 'saleRevenue', label: '销售收入', width: 12, type: 'money' },
+        { key: 'netSettled', label: '净入账', width: 12, type: 'money' },
+        { key: 'qty', label: '销售件数', width: 10 },
+        { key: 'shippedCost', label: '成本', width: 12, type: 'money' },
+        { key: 'realProfit', label: '真实利润', width: 12, type: 'money' },
+        { key: 'systemProfit', label: '系统毛利', width: 12, type: 'money' },
+        { key: 'profitDiff', label: '毛利差', width: 12, type: 'money' },
+        { key: 'bucket', label: '状态', width: 14 }
+      ],
+      rows: state.result.diffRows
+    }], `对账_${state.platformId}_${state.month}`)
+  }, [state.result, state.platformId, state.month])
+
+  const onExportAllData = useCallback(() => {
+    const data = {
+      exportedAt: new Date().toISOString(),
+      productCost: productCost.items,
+      productMaster: productMaster.items,
+      feeRecords: feeRecords.items,
+      allocStandards: allocStandards.items,
+      exchangeRates: exchangeRates.rates,
+      costHistory: costHistory.logs,
+      shopProfiles: shopProfiles.items,
+      settings
     }
-    const lines = [head.join(',')]
-    for (const r of state.result.diffRows) {
-      lines.push([
-        csvCell(r.orderId), csvCell(r.styleCode || ''), csvCell(r.productCode || ''),
-        r.saleRevenue, r.netSettled, r.qty || 0,
-        r.shippedCost, r.costSource === 'custom' ? '自维护' : '聚水潭',
-        r.realProfit, r.systemProfit, r.profitDiff, r.bucket
-      ].join(','))
-    }
-    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = `对账_${state.platformId}_${state.month}.csv`; a.click()
+    a.href = url
+    a.download = `ai-reconcile-backup_${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
     URL.revokeObjectURL(url)
-  }, [state.result, state.platformId, state.month])
+  }, [productCost.items, productMaster.items, feeRecords.items, allocStandards.items,
+      exchangeRates.rates, costHistory.logs, shopProfiles.items, settings])
 
   if (!state.authed) return <LoginPage onLogin={login}/>
 
-  // 当前页是否需要 TopBar 显示对账上下文
   const isReconcileContextPage = [
     'diff-analyze', 'product-profit', 'shop-profit',
     'recv-summary', 'recv-detail', 'bill-summary', 'bill-detail',
@@ -207,41 +238,29 @@ export default function App() {
 
   const renderPage = () => {
     switch (pageId) {
-      case 'diff-analyze':
-        return (
-          <DiffAnalyzePage
-            platform={platform} uploads={state.uploads}
-            onPick={onPick} onClear={onClear} onStart={onStart}
-            canStart={canStart} reconciling={state.reconciling}
-            result={state.result} error={state.error} parseWarnings={state.parseWarnings}
-            onLoadSample={onLoadSample}/>
-        )
+      // 商品管理
+      case 'product-master':
+        return <ProductMasterPage productMaster={productMaster}/>
       case 'product-cost':
-        return <ProductCostPage productCost={productCost} currentPeriod={state.month}/>
-      case 'product-profit':
-        return <ProductProfitPage
-          reconcileResult={state.result} costItems={productCost.items} currentPeriod={state.month}
-          feeRecords={feeRecords.items} allocStandards={allocStandards.items}
-          shopName={shop?.name || ''}/>
-      case 'shop-profit':
-        return <ShopProfitPage
-          reconcileResult={state.result} shopName={shop?.name || ''}
-          costItems={productCost.items} feeRecords={feeRecords.items}
-          allocStandards={allocStandards.items} period={state.month}/>
+        return <ProductCostPage productCost={productCost} costHistory={costHistory} currentPeriod={state.month}/>
+      case 'cost-history':
+        return <CostHistoryPage costHistory={costHistory}/>
+
+      // 利润核算中心
       case 'data-aggregate':
         return <DataAggregatePage feeRecords={feeRecords} currentPeriod={state.month}/>
       case 'alloc-standard':
         return <AllocStandardPage allocStandards={allocStandards}/>
       case 'data-allocate':
-        return <DataAllocatePage
-          feeRecords={feeRecords.items} allocStandards={allocStandards.items}
+        return <DataAllocatePage feeRecords={feeRecords.items} allocStandards={allocStandards.items}
           reconcileResult={state.result} period={state.month}/>
       case 'profit-analyze':
-        return <ProfitAnalyzePage
-          reconcileResult={state.result}
+        return <ProfitAnalyzePage reconcileResult={state.result}
           feeRecords={feeRecords.items} allocStandards={allocStandards.items}
           costItems={productCost.items} period={state.month}
           platformId={state.platformId} shopName={shop?.name || ''}/>
+
+      // 数据中心
       case 'recv-summary':
         return <RecvSummaryPage reconcileResult={state.result} shopName={shop?.name || ''}/>
       case 'recv-detail':
@@ -252,6 +271,37 @@ export default function App() {
       case 'bill-detail':
         return <BillDetailPage reconcileResult={state.result}
           shopName={shop?.name || ''} platformName={platform.name} period={state.month}/>
+      case 'shop-profit':
+        return <ShopProfitPage reconcileResult={state.result} shopName={shop?.name || ''}
+          costItems={productCost.items} feeRecords={feeRecords.items}
+          allocStandards={allocStandards.items} period={state.month}/>
+      case 'diff-analyze':
+        return <DiffAnalyzePage platform={platform} uploads={state.uploads}
+          onPick={onPick} onClear={onClear} onStart={onStart}
+          canStart={canStart} reconciling={state.reconciling}
+          result={state.result} error={state.error} parseWarnings={state.parseWarnings}
+          onLoadSample={onLoadSample}/>
+      case 'product-profit':
+        return <ProductProfitPage reconcileResult={state.result} costItems={productCost.items}
+          currentPeriod={state.month}
+          feeRecords={feeRecords.items} allocStandards={allocStandards.items}
+          shopName={shop?.name || ''}/>
+
+      // 汇率管理
+      case 'fx-rates':
+        return <FxRatesPage exchangeRates={exchangeRates}/>
+
+      // 店铺管理
+      case 'shop-profiles':
+        return <ShopProfilesPage shopProfiles={shopProfiles}/>
+
+      // 系统设置
+      case 'sys-roles':
+      case 'sys-perms':
+        return <SystemPlaceholder pageId={pageId}/>
+      case 'sys-backup':
+        return <SystemPlaceholder pageId={pageId} onExportAllData={onExportAllData}/>
+
       default:
         return <PlaceholderPage pageId={pageId}/>
     }

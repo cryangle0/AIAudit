@@ -303,3 +303,28 @@
 @media (max-width: 1280px) {
   .rec-product-profit-layout { grid-template-columns: 1fr; }
 }
+
+
+/* 汇率规则提示卡 */
+.rec-fx-rule-card {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 14px; border-radius: 10px;
+  background: var(--accent-soft); color: var(--text-primary);
+  border: 1px solid var(--accent);
+  font-size: var(--font-size-sm); line-height: 1.7;
+}
+.rec-fx-rule-card svg { color: var(--accent); flex-shrink: 0; margin-top: 3px; }
+
+/* 编辑提示 */
+.rec-edit-tip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px; margin-bottom: 12px;
+  background: rgba(241, 178, 56, 0.12); border-radius: 6px;
+  font-size: var(--font-size-xs); color: #c98412;
+}
+
+/* 表单 em 提示 */
+.rec-form-grid em {
+  display: block; color: var(--text-muted); font-style: normal;
+  font-size: 11px; margin-top: 2px;
+}

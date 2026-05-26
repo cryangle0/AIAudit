@@ -1,12 +1,12 @@
 // 商品成本（利润核算中心 → 商品成本）
-// 按客户模板字段：款式编码 / 商品编码 / 标费 / 辅料 (+ 商品成本本体 = 总成本)
-// 支持按期间维护、批量导入、Excel 模板下载
+// 按客户需求 #2 #3 #4：标费/辅料 + 在线编辑 + 成本变更日志（变更只影响后续数据）
 
 import { useRef, useState, useMemo } from 'react'
-import { Upload, Plus, Trash2, Download, FileSpreadsheet } from 'lucide-react'
+import { Upload, Plus, Trash2, Download, FileSpreadsheet, History } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { readWorkbook } from '../utils/excel.js'
 import { fmtMoney } from '../utils/format.js'
+import PageHeader from '../components/common/PageHeader.jsx'
 import './pages.css'
 
 const COLUMNS = [
@@ -19,8 +19,7 @@ const COLUMNS = [
   { key: 'accessoryFee', label: '辅料',     hint: '元' }
 ]
 
-// Excel 列名 → 内部 key 的映射（容忍中英文/空格）
-const EXCEL_HEADER_MAP = {
+const HEADER_MAP = {
   '期间': 'period', '月份': 'period',
   '款式编码': 'styleCode', '款式': 'styleCode',
   '商品编码': 'productCode', '货号': 'productCode',
@@ -35,16 +34,14 @@ function num(v) {
   const n = Number(v)
   return Number.isFinite(n) ? n : 0
 }
+function calcTotal(rec) { return num(rec.baseCost) + num(rec.tagFee) + num(rec.accessoryFee) }
 
-function calcTotal(rec) {
-  return num(rec.baseCost) + num(rec.tagFee) + num(rec.accessoryFee)
-}
-
-export default function ProductCostPage({ productCost, currentPeriod }) {
+export default function ProductCostPage({ productCost, costHistory, currentPeriod }) {
   const { items, setAll, addOrUpdate, remove, clearAll } = productCost
+  const { append: logChange } = costHistory
   const [periodFilter, setPeriodFilter] = useState(currentPeriod || '')
   const [search, setSearch] = useState('')
-  const [editing, setEditing] = useState(null) // 新增/编辑表单
+  const [editing, setEditing] = useState(null)
   const fileRef = useRef()
 
   const filtered = useMemo(() => {
@@ -61,34 +58,35 @@ export default function ProductCostPage({ productCost, currentPeriod }) {
   }, [items, periodFilter, search])
 
   const periods = useMemo(() => {
-    const s = new Set(items.map(x => x.period).filter(Boolean))
-    return Array.from(s).sort().reverse()
+    return Array.from(new Set(items.map(x => x.period).filter(Boolean))).sort().reverse()
   }, [items])
 
-  const onImport = async file => {
+  const onImport = async (file) => {
     try {
       const book = await readWorkbook(file)
       const rows = book[Object.keys(book)[0]] || []
       const records = []
       for (const r of rows) {
         const rec = {}
-        for (const [excelKey, val] of Object.entries(r)) {
-          const k = EXCEL_HEADER_MAP[excelKey?.trim?.() ?? excelKey]
-          if (k) rec[k] = val
+        for (const [k, v] of Object.entries(r)) {
+          const target = HEADER_MAP[k?.trim?.() ?? k]
+          if (target) rec[target] = v
         }
         if (!rec.styleCode && !rec.productCode) continue
         rec.period = String(rec.period || currentPeriod || '').slice(0, 7)
-        rec.baseCost = num(rec.baseCost)
-        rec.tagFee = num(rec.tagFee)
-        rec.accessoryFee = num(rec.accessoryFee)
+        rec.baseCost = num(rec.baseCost); rec.tagFee = num(rec.tagFee); rec.accessoryFee = num(rec.accessoryFee)
         records.push(rec)
       }
-      // 合并：同 period+styleCode+productCode 覆盖
       const map = new Map(items.map(x => [`${x.period}|${x.styleCode || ''}|${x.productCode || ''}`, x]))
       for (const r of records) {
-        map.set(`${r.period}|${r.styleCode || ''}|${r.productCode || ''}`, { ...r, updatedAt: Date.now() })
+        const key = `${r.period}|${r.styleCode || ''}|${r.productCode || ''}`
+        map.set(key, { ...r, updatedAt: Date.now() })
       }
       setAll(Array.from(map.values()))
+      logChange({
+        action: 'import', period: '', field: '批量',
+        oldValue: items.length, newValue: records.length
+      })
       alert(`导入完成：${records.length} 条记录`)
     } catch (e) {
       alert('导入失败：' + e.message)
@@ -105,14 +103,49 @@ export default function ProductCostPage({ productCost, currentPeriod }) {
     XLSX.writeFile(wb, '商品成本导入模板.xlsx')
   }
 
+  // 保存时记录修改日志
+  const onSaveOne = (newRec) => {
+    const oldRec = items.find(x =>
+      x.period === newRec.period &&
+      x.styleCode === newRec.styleCode &&
+      x.productCode === newRec.productCode)
+
+    const action = oldRec ? 'update' : 'create'
+    if (oldRec) {
+      const fieldMap = { baseCost: '商品成本', tagFee: '标费', accessoryFee: '辅料', productName: '商品名称' }
+      for (const [k, label] of Object.entries(fieldMap)) {
+        if (oldRec[k] !== newRec[k]) {
+          logChange({
+            action: 'update', period: newRec.period,
+            styleCode: newRec.styleCode, productCode: newRec.productCode,
+            field: label, oldValue: oldRec[k], newValue: newRec[k]
+          })
+        }
+      }
+    } else {
+      logChange({
+        action: 'create', period: newRec.period,
+        styleCode: newRec.styleCode, productCode: newRec.productCode,
+        field: '总成本', oldValue: 0, newValue: calcTotal(newRec)
+      })
+    }
+    addOrUpdate(newRec)
+  }
+
+  const onRemoveOne = (rec) => {
+    logChange({
+      action: 'delete', period: rec.period,
+      styleCode: rec.styleCode, productCode: rec.productCode,
+      field: '总成本', oldValue: calcTotal(rec), newValue: null
+    })
+    remove(rec)
+  }
+
   return (
     <div className="rec-page">
-      <div className="rec-page-head">
-        <h2>商品成本</h2>
-        <div className="rec-page-sub">
-          按期间维护商品成本（商品成本 + 标费 + 辅料 = 总成本）。优先用于对账与利润计算，未维护时回落到聚水潭实发成本。
-        </div>
-      </div>
+      <PageHeader
+        title="商品成本"
+        subtitle="按期间维护商品成本（商品成本 + 标费 + 辅料 = 总成本）。变更只影响后续报表，历史快照锁定（需求 #2 #3）"/>
 
       <div className="rec-toolbar">
         <select value={periodFilter} onChange={e => setPeriodFilter(e.target.value)} className="rec-input">
@@ -120,15 +153,13 @@ export default function ProductCostPage({ productCost, currentPeriod }) {
           {periods.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
         <input className="rec-input" placeholder="搜索 款式/商品编码/名称"
-          value={search} onChange={e => setSearch(e.target.value)} />
-
-        <span className="rec-spacer" />
-
+          value={search} onChange={e => setSearch(e.target.value)}/>
+        <span className="rec-spacer"/>
         <button className="rec-btn" onClick={onDownloadTemplate}>
           <Download size={14}/> 下载模板
         </button>
         <input ref={fileRef} type="file" accept=".xlsx" hidden
-          onChange={e => { const f = e.target.files?.[0]; if (f) onImport(f); e.target.value = '' }} />
+          onChange={e => { const f = e.target.files?.[0]; if (f) onImport(f); e.target.value = '' }}/>
         <button className="rec-btn" onClick={() => fileRef.current.click()}>
           <Upload size={14}/> 批量导入
         </button>
@@ -169,7 +200,7 @@ export default function ProductCostPage({ productCost, currentPeriod }) {
                 <td className="rec-muted">{r.updatedAt ? new Date(r.updatedAt).toLocaleDateString() : '—'}</td>
                 <td>
                   <button className="rec-icon-btn" title="删除"
-                    onClick={e => { e.stopPropagation(); if (confirm('确认删除此条记录？')) remove(r) }}>
+                    onClick={e => { e.stopPropagation(); if (confirm('确认删除此条记录？此操作会写入修改记录。')) onRemoveOne(r) }}>
                     <Trash2 size={13}/>
                   </button>
                 </td>
@@ -191,7 +222,7 @@ export default function ProductCostPage({ productCost, currentPeriod }) {
 
       {filtered.length > 0 && (
         <div className="rec-toolbar" style={{ marginTop: 12 }}>
-          <span className="rec-spacer" />
+          <span className="rec-spacer"/>
           <button className="rec-btn danger" onClick={() => {
             if (confirm(`确认清空当前 ${filtered.length} 条记录？此操作不可恢复。`)) clearAll()
           }}>
@@ -201,11 +232,7 @@ export default function ProductCostPage({ productCost, currentPeriod }) {
       )}
 
       {editing && (
-        <EditDialog
-          rec={editing}
-          onClose={() => setEditing(null)}
-          onSave={r => { addOrUpdate(r); setEditing(null) }}
-        />
+        <EditDialog rec={editing} onClose={() => setEditing(null)} onSave={onSaveOne}/>
       )}
     </div>
   )
@@ -218,6 +245,11 @@ function EditDialog({ rec, onClose, onSave }) {
     <div className="rec-dialog-mask" onClick={onClose}>
       <div className="rec-dialog" onClick={e => e.stopPropagation()}>
         <h3>{rec.updatedAt ? '编辑商品成本' : '新增商品成本'}</h3>
+        {rec.updatedAt && (
+          <div className="rec-edit-tip">
+            <History size={12}/> 修改将写入「成本修改记录」，且仅影响后续生成的报表
+          </div>
+        )}
         <div className="rec-form-grid">
           {COLUMNS.map(c => (
             <label key={c.key}>
@@ -226,7 +258,7 @@ function EditDialog({ rec, onClose, onSave }) {
                 value={form[c.key] ?? ''}
                 onChange={e => set(c.key,
                   ['baseCost', 'tagFee', 'accessoryFee'].includes(c.key) ? num(e.target.value) : e.target.value)}
-                placeholder={c.hint} />
+                placeholder={c.hint}/>
             </label>
           ))}
           <label className="rec-form-readonly">

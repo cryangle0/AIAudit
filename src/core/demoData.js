@@ -50,43 +50,28 @@ export const DEMO_BILL_DETAIL = [
 
 // 店铺利润表 — 严格按 Excel 5月示例的 4 个店铺
 export const DEMO_SHOP_PROFIT = [
-  {
-    shopName: '天猫旗舰店',
-    revenue: 693520.63, noAfterSale: 305353.53, refund: 388167.10, netRevenue: 305353.53,
-    shippedQty: 2245, returnedQty: 0, productCost: 78575, tagCost: 0, accessoryCost: 0, shippingCost: 6735, costTotal: 85310,
-    platformFee: 1347, commission: 0, promoFee: 0, insurance: 0, redPacket: 0, subsidy: 35920, feeTotal: 37267,
-    profit: 305353.53 - 85310 - 37267,
-    profitRate: (305353.53 - 85310 - 37267) / 305353.53,
-    returnRate: 0
-  },
-  {
-    shopName: '唯品会店',
-    revenue: 1693520.63, noAfterSale: 1305353.53, refund: 388167.10, netRevenue: 1305353.53,
-    shippedQty: 9598, returnedQty: 0, productCost: 335930, tagCost: 0, accessoryCost: 0, shippingCost: 28794, costTotal: 364724,
-    platformFee: 5758.8, commission: 0, promoFee: 0, insurance: 0, redPacket: 0, subsidy: 153568, feeTotal: 159326.8,
-    profit: 1305353.53 - 364724 - 159326.8,
-    profitRate: (1305353.53 - 364724 - 159326.8) / 1305353.53,
-    returnRate: 0
-  },
-  {
-    shopName: '拼多多专卖店',
-    revenue: 393520.63, noAfterSale: 105353.53, refund: 288167.10, netRevenue: 105353.53,
-    shippedQty: 775, returnedQty: 0, productCost: 27125, tagCost: 0, accessoryCost: 0, shippingCost: 2325, costTotal: 29450,
-    platformFee: 465, commission: 0, promoFee: 0, insurance: 0, redPacket: 0, subsidy: 12400, feeTotal: 12865,
-    profit: 105353.53 - 29450 - 12865,
-    profitRate: (105353.53 - 29450 - 12865) / 105353.53,
-    returnRate: 0
-  },
-  {
-    shopName: '抖音雪中飞专卖店',
-    revenue: 593520.63, noAfterSale: 305353.53, refund: 288167.10, netRevenue: 305353.53,
-    shippedQty: 2245, returnedQty: 0, productCost: 78575, tagCost: 0, accessoryCost: 0, shippingCost: 6735, costTotal: 85310,
-    platformFee: 1347, commission: 0, promoFee: 0, insurance: 0, redPacket: 0, subsidy: 35920, feeTotal: 37267,
-    profit: 305353.53 - 85310 - 37267,
-    profitRate: (305353.53 - 85310 - 37267) / 305353.53,
-    returnRate: 0
-  }
+  buildDemoShopRow('天猫旗舰店', 693520.63, 305353.53, 388167.10, 305353.53, 2245, 78575, 6735, 1347, 35920),
+  buildDemoShopRow('唯品会店', 1693520.63, 1305353.53, 388167.10, 1305353.53, 9598, 335930, 28794, 5758.8, 153568),
+  buildDemoShopRow('拼多多专卖店', 393520.63, 105353.53, 288167.10, 105353.53, 775, 27125, 2325, 465, 12400),
+  buildDemoShopRow('抖音雪中飞专卖店', 593520.63, 305353.53, 288167.10, 305353.53, 2245, 78575, 6735, 1347, 35920)
 ]
+
+function buildDemoShopRow(shopName, revenue, noAfterSale, refund, netRevenue,
+  shippedQty, productCost, shippingCost, platformFee, subsidy) {
+  const costTotal = productCost + shippingCost
+  const feeTotal = platformFee + subsidy
+  const profit = netRevenue - costTotal - feeTotal
+  return {
+    shopName, revenue, noAfterSale, refund, netRevenue,
+    shippedQty, returnedQty: 0,
+    productCost, tagCost: 0, accessoryCost: 0, shippingCost, costTotal,
+    platformFee, commission: 0, promoFee: 0, insurance: 0, redPacket: 0, subsidy, feeTotal,
+    profit,
+    profitRate: netRevenue > 0 ? profit / netRevenue : 0,
+    returnRate: 0,
+    confirmRate: revenue > 0 ? netRevenue / revenue : 0
+  }
+}
 
 // 商品利润表 — 严格按 Excel 模板 12 行示例
 export const DEMO_PRODUCT_PROFIT = [
