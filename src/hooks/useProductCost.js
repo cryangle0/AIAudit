@@ -1,15 +1,28 @@
 import { useState, useCallback } from 'react'
+import { DEMO_PRODUCT_COST } from '../core/demoData.js'
 
 const STORAGE_KEY = 'ai-reconcile.productCost'
+const CLEARED_KEY = 'ai-reconcile.productCost.cleared'
 
-// 商品成本表：{ period: '2026-01', styleCode, productCode, productName, baseCost, tagFee, accessoryFee, totalCost, updatedAt }
-function load() {
+function buildSeed() {
+  const t = Date.now()
+  return DEMO_PRODUCT_COST.map(x => ({ ...x, updatedAt: t }))
+}
+
+function loadInitial() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const arr = JSON.parse(raw)
-    return Array.isArray(arr) ? arr : []
-  } catch { return [] }
+    if (raw) {
+      const arr = JSON.parse(raw)
+      return { items: Array.isArray(arr) ? arr : [], isSeed: false }
+    }
+    if (!localStorage.getItem(CLEARED_KEY)) {
+      const seeded = buildSeed()
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded))
+      return { items: seeded, isSeed: true }
+    }
+    return { items: [], isSeed: false }
+  } catch { return { items: [], isSeed: false } }
 }
 
 function save(arr) {
@@ -17,9 +30,13 @@ function save(arr) {
 }
 
 export function useProductCost() {
-  const [items, setItems] = useState(load)
+  const initial = loadInitial()
+  const [items, setItems] = useState(initial.items)
+  const [isSeed, setIsSeed] = useState(initial.isSeed)
 
-  const setAll = useCallback(next => { setItems(next); save(next) }, [])
+  const setAll = useCallback(next => {
+    setItems(next); save(next); setIsSeed(false)
+  }, [])
 
   const addOrUpdate = useCallback(rec => {
     setItems(prev => {
@@ -27,28 +44,35 @@ export function useProductCost() {
       const idx = prev.findIndex(x => `${x.period}|${x.styleCode || ''}|${x.productCode || ''}` === key)
       const merged = { ...rec, updatedAt: Date.now() }
       const next = idx >= 0 ? prev.map((x, i) => i === idx ? merged : x) : [...prev, merged]
-      save(next)
-      return next
+      save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
   const remove = useCallback(rec => {
     setItems(prev => {
       const next = prev.filter(x => x !== rec)
-      save(next)
-      return next
+      save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
   const clearAll = useCallback(() => {
-    setItems([])
-    save([])
+    setItems([]); save([])
+    try { localStorage.setItem(CLEARED_KEY, '1') } catch { /* ignore */ }
+    setIsSeed(false)
   }, [])
 
-  return { items, setAll, addOrUpdate, remove, clearAll }
+  const reseed = useCallback(() => {
+    const seeded = buildSeed()
+    setItems(seeded); save(seeded)
+    try { localStorage.removeItem(CLEARED_KEY) } catch { /* ignore */ }
+    setIsSeed(true)
+  }, [])
+
+  return { items, isSeed, setAll, addOrUpdate, remove, clearAll, reseed }
 }
 
-// 在指定 period 下，按 productCode 优先、styleCode 兜底查找商品成本
 export function findCost(items, period, styleCode, productCode) {
   if (!items || items.length === 0) return null
   const sameP = items.filter(x => x.period === period)

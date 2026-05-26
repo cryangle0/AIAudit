@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx'
 import { readWorkbook } from '../utils/excel.js'
 import { fmtMoney } from '../utils/format.js'
 import PageHeader from '../components/common/PageHeader.jsx'
+import SeedDataBanner from '../components/common/SeedDataBanner.jsx'
 import './pages.css'
 
 const COLUMNS = [
@@ -146,6 +147,12 @@ export default function ProductCostPage({ productCost, costHistory, currentPerio
       <PageHeader
         title="商品成本"
         subtitle="按期间维护商品成本（商品成本 + 标费 + 辅料 = 总成本）。变更只影响后续报表，历史快照锁定（需求 #2 #3）"/>
+
+      {productCost.isSeed && (
+        <SeedDataBanner onResetSeed={() => {
+          if (confirm('确认清空当前数据并重新加载演示种子？')) productCost.reseed()
+        }}/>
+      )}
 
       <div className="rec-toolbar">
         <select value={periodFilter} onChange={e => setPeriodFilter(e.target.value)} className="rec-input">

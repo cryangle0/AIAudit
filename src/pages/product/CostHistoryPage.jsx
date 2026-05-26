@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { History, Trash2, Download } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader.jsx'
 import EmptyState from '../../components/common/EmptyState.jsx'
+import SeedDataBanner from '../../components/common/SeedDataBanner.jsx'
 import { exportSheets } from '../../utils/excelExport.js'
 import { fmtMoney } from '../../utils/format.js'
 import '../pages.css'
@@ -13,7 +14,7 @@ const ACTION_LABEL = {
 }
 
 export default function CostHistoryPage({ costHistory }) {
-  const { logs, clearAll } = costHistory
+  const { logs, isSeed, clearAll, reseed } = costHistory
   const [filter, setFilter] = useState('all')
 
   const filtered = useMemo(() => {
@@ -70,6 +71,12 @@ export default function CostHistoryPage({ costHistory }) {
             </button>
           </>
         }/>
+
+      {isSeed && (
+        <SeedDataBanner
+          tip="当前为 5 条演示种子记录。在「商品成本」页操作（新增/修改/删除）会自动生成新记录。"
+          onResetSeed={() => { if (confirm('清空当前并重新加载演示种子？')) reseed() }}/>
+      )}
 
       <div className="rec-toolbar">
         <span>筛选：</span>

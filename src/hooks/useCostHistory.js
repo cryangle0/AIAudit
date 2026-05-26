@@ -1,18 +1,24 @@
 // 成本修改历史 — 按客户需求 #4
-// LogEntry: { id, timestamp, operator, action, period, styleCode, productCode,
-//   field, oldValue, newValue, snapshot }
 
 import { useCallback, useState } from 'react'
+import { DEMO_COST_HISTORY } from '../core/demoData.js'
 
 const STORAGE_KEY = 'ai-reconcile.costHistory'
+const CLEARED_KEY = 'ai-reconcile.costHistory.cleared'
 
-function load() {
+function loadInitial() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const arr = JSON.parse(raw)
-    return Array.isArray(arr) ? arr : []
-  } catch { return [] }
+    if (raw) {
+      const arr = JSON.parse(raw)
+      return { logs: Array.isArray(arr) ? arr : [], isSeed: false }
+    }
+    if (!localStorage.getItem(CLEARED_KEY)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_COST_HISTORY))
+      return { logs: DEMO_COST_HISTORY, isSeed: true }
+    }
+    return { logs: [], isSeed: false }
+  } catch { return { logs: [], isSeed: false } }
 }
 
 function save(arr) {
@@ -24,7 +30,9 @@ function newId() {
 }
 
 export function useCostHistory() {
-  const [logs, setLogs] = useState(load)
+  const initial = loadInitial()
+  const [logs, setLogs] = useState(initial.logs)
+  const [isSeed, setIsSeed] = useState(initial.isSeed)
 
   const append = useCallback((entry) => {
     setLogs(prev => {
@@ -34,13 +42,24 @@ export function useCostHistory() {
         operator: entry.operator || '当前用户',
         ...entry
       }
-      const next = [item, ...prev].slice(0, 1000) // 最多保留 1000 条
+      const next = [item, ...prev].slice(0, 1000)
       save(next)
       return next
     })
+    setIsSeed(false)
   }, [])
 
-  const clearAll = useCallback(() => { setLogs([]); save([]) }, [])
+  const clearAll = useCallback(() => {
+    setLogs([]); save([])
+    try { localStorage.setItem(CLEARED_KEY, '1') } catch { /* ignore */ }
+    setIsSeed(false)
+  }, [])
 
-  return { logs, append, clearAll }
+  const reseed = useCallback(() => {
+    setLogs(DEMO_COST_HISTORY); save(DEMO_COST_HISTORY)
+    try { localStorage.removeItem(CLEARED_KEY) } catch { /* ignore */ }
+    setIsSeed(true)
+  }, [])
+
+  return { logs, isSeed, append, clearAll, reseed }
 }

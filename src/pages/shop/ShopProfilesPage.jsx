@@ -2,12 +2,13 @@
 import { useMemo, useState } from 'react'
 import { Plus, Trash2, Power, PowerOff } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import SeedDataBanner from '../../components/common/SeedDataBanner.jsx'
 import { PLATFORMS } from '../../platforms/index.js'
 import { CURRENCIES } from '../../core/currency.js'
 import '../pages.css'
 
 export default function ShopProfilesPage({ shopProfiles }) {
-  const { items, add, update, remove } = shopProfiles
+  const { items, isSeed, add, update, remove, reseed } = shopProfiles
   const [editing, setEditing] = useState(null)
   const [filter, setFilter] = useState('') // platformId
 
@@ -20,6 +21,12 @@ export default function ShopProfilesPage({ shopProfiles }) {
       <PageHeader
         title="店铺/平台配置"
         subtitle="维护店铺基础信息（店铺名称/所属平台/状态/默认币种），关联汇率管理与对账流程"/>
+
+      {isSeed && (
+        <SeedDataBanner
+          tip="当前为 5 个演示店铺（含国内/海外）。可直接编辑、停用或新增。"
+          onResetSeed={() => { if (confirm('清空当前数据并重新加载演示种子？')) reseed() }}/>
+      )}
 
       <div className="rec-toolbar">
         <select className="rec-input" value={filter} onChange={e => setFilter(e.target.value)}>

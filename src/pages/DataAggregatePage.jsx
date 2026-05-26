@@ -8,6 +8,7 @@ import { FEE_TYPES, ORG_OPTIONS } from '../hooks/useFeeRecords.js'
 import { readWorkbook } from '../utils/excel.js'
 import { fmtMoney } from '../utils/format.js'
 import { PLATFORMS, MOCK_SHOPS } from '../platforms/index.js'
+import SeedDataBanner from '../components/common/SeedDataBanner.jsx'
 import './pages.css'
 
 const COLUMNS = [
@@ -41,7 +42,7 @@ function num(v) {
 }
 
 export default function DataAggregatePage({ feeRecords, currentPeriod }) {
-  const { items, setAll, add, addMany, remove, clearAll } = feeRecords
+  const { items, isSeed, setAll, add, addMany, remove, clearAll, reseed } = feeRecords
   const [periodFilter, setPeriodFilter] = useState(currentPeriod || '')
   const [feeTypeFilter, setFeeTypeFilter] = useState('')
   const [editing, setEditing] = useState(null)
@@ -102,6 +103,12 @@ export default function DataAggregatePage({ feeRecords, currentPeriod }) {
           按费用类型归集到组织/店铺/平台单号维度。每条费用记录将在「数据分配」按对应分配标准分摊到订单商品。
         </div>
       </div>
+
+      {isSeed && (
+        <SeedDataBanner
+          tip="当前为 5 条演示费用记录（推广费/运费险/红包/快递费/保险费）。"
+          onResetSeed={() => { if (confirm('清空当前数据并重新加载演示种子？')) reseed() }}/>
+      )}
 
       <div className="rec-toolbar">
         <select value={periodFilter} onChange={e => setPeriodFilter(e.target.value)} className="rec-input">

@@ -5,6 +5,7 @@ import { useRef, useState, useMemo } from 'react'
 import { Upload, Plus, Trash2, Download, FileSpreadsheet } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import PageHeader from '../../components/common/PageHeader.jsx'
+import SeedDataBanner from '../../components/common/SeedDataBanner.jsx'
 import { readWorkbook } from '../../utils/excel.js'
 import '../pages.css'
 
@@ -25,7 +26,7 @@ const HEADER_MAP = {
 }
 
 export default function ProductMasterPage({ productMaster }) {
-  const { items, addOrUpdate, addMany, remove, clearAll } = productMaster
+  const { items, addOrUpdate, addMany, remove, clearAll, reseed } = productMaster
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null)
   const fileRef = useRef()
@@ -75,6 +76,12 @@ export default function ProductMasterPage({ productMaster }) {
       <PageHeader
         title="商品资料"
         subtitle="维护款式编码 / 商品编码 / 商品名称 / 品类等基础信息（需求 #1）"/>
+
+      {productMaster.isSeed && (
+        <SeedDataBanner onResetSeed={() => {
+          if (confirm('确认清空当前数据并重新加载演示种子？')) productMaster.reseed()
+        }}/>
+      )}
 
       <div className="rec-toolbar">
         <input className="rec-input" placeholder="搜索 款式/商品编码/名称/品类"

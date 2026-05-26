@@ -1,20 +1,24 @@
-// 店铺配置 — 按需求 #16-#18
-// ShopProfile: { id, platformId, name, currency, status('active'|'inactive'), settlementRule, memo }
-//
-// 与 useSettings.customShops 配合：customShops 是简单的 [{ id, name }]
-// 这里的 ShopProfile 是更完整的店铺档案
+// 店铺配置 — 需求 #16-#18
 
 import { useCallback, useState } from 'react'
+import { DEMO_SHOP_PROFILES } from '../core/demoData.js'
 
 const STORAGE_KEY = 'ai-reconcile.shopProfiles'
+const CLEARED_KEY = 'ai-reconcile.shopProfiles.cleared'
 
-function load() {
+function loadInitial() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const arr = JSON.parse(raw)
-    return Array.isArray(arr) ? arr : []
-  } catch { return [] }
+    if (raw) {
+      const arr = JSON.parse(raw)
+      return { items: Array.isArray(arr) ? arr : [], isSeed: false }
+    }
+    if (!localStorage.getItem(CLEARED_KEY)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_SHOP_PROFILES))
+      return { items: DEMO_SHOP_PROFILES, isSeed: true }
+    }
+    return { items: [], isSeed: false }
+  } catch { return { items: [], isSeed: false } }
 }
 
 function save(arr) {
@@ -26,13 +30,16 @@ function newId() {
 }
 
 export function useShopProfiles() {
-  const [items, setItems] = useState(load)
+  const initial = loadInitial()
+  const [items, setItems] = useState(initial.items)
+  const [isSeed, setIsSeed] = useState(initial.isSeed)
 
   const add = useCallback((profile) => {
     setItems(prev => {
       const next = [...prev, { id: newId(), createdAt: Date.now(), status: 'active', ...profile }]
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
   const update = useCallback((id, patch) => {
@@ -40,6 +47,7 @@ export function useShopProfiles() {
       const next = prev.map(x => x.id === id ? { ...x, ...patch, updatedAt: Date.now() } : x)
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
   const remove = useCallback((id) => {
@@ -47,7 +55,20 @@ export function useShopProfiles() {
       const next = prev.filter(x => x.id !== id)
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
-  return { items, add, update, remove }
+  const clearAll = useCallback(() => {
+    setItems([]); save([])
+    try { localStorage.setItem(CLEARED_KEY, '1') } catch { /* ignore */ }
+    setIsSeed(false)
+  }, [])
+
+  const reseed = useCallback(() => {
+    setItems(DEMO_SHOP_PROFILES); save(DEMO_SHOP_PROFILES)
+    try { localStorage.removeItem(CLEARED_KEY) } catch { /* ignore */ }
+    setIsSeed(true)
+  }, [])
+
+  return { items, isSeed, add, update, remove, clearAll, reseed }
 }

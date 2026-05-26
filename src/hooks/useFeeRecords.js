@@ -1,37 +1,33 @@
 // 数据归集 — 费用记录持久化
-// FeeRecord: { id, period, feeType, org, shopId, platformOrderId, amount, date, memo }
-// 严格按客户模板字段：费用类型 / 组织 / 店铺 / 平台单号 / 费用金额 / 费用日期 / 备注
 
 import { useCallback, useState } from 'react'
+import { DEMO_FEE_RECORDS } from '../core/demoData.js'
 
 const STORAGE_KEY = 'ai-reconcile.feeRecords'
+const CLEARED_KEY = 'ai-reconcile.feeRecords.cleared'
 
-// 客户模板里强调的费用类型（可在分配标准里映射）
 export const FEE_TYPES = [
-  '平台服务费',
-  '佣金',
-  '推广费',
-  '运费险',
-  '红包',
-  '补贴',
-  '保险费',
-  '提现手续费',
-  '快递费',
-  '其他'
+  '平台服务费', '佣金', '推广费', '运费险', '红包',
+  '补贴', '保险费', '提现手续费', '快递费', '其他'
 ]
 
-// 组织维度（默认童装事业部，未来可扩展）
 export const ORG_OPTIONS = [
   { id: 'default', name: '童装事业部' }
 ]
 
-function load() {
+function loadInitial() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const arr = JSON.parse(raw)
-    return Array.isArray(arr) ? arr : []
-  } catch { return [] }
+    if (raw) {
+      const arr = JSON.parse(raw)
+      return { items: Array.isArray(arr) ? arr : [], isSeed: false }
+    }
+    if (!localStorage.getItem(CLEARED_KEY)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_FEE_RECORDS))
+      return { items: DEMO_FEE_RECORDS, isSeed: true }
+    }
+    return { items: [], isSeed: false }
+  } catch { return { items: [], isSeed: false } }
 }
 
 function save(arr) {
@@ -43,15 +39,18 @@ function newId() {
 }
 
 export function useFeeRecords() {
-  const [items, setItems] = useState(load)
+  const initial = loadInitial()
+  const [items, setItems] = useState(initial.items)
+  const [isSeed, setIsSeed] = useState(initial.isSeed)
 
-  const setAll = useCallback(next => { setItems(next); save(next) }, [])
+  const setAll = useCallback(next => { setItems(next); save(next); setIsSeed(false) }, [])
 
   const add = useCallback(rec => {
     setItems(prev => {
       const next = [...prev, { id: newId(), createdAt: Date.now(), ...rec }]
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
   const addMany = useCallback(records => {
@@ -60,6 +59,7 @@ export function useFeeRecords() {
       const next = [...prev, ...stamped]
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
   const update = useCallback((id, patch) => {
@@ -67,16 +67,28 @@ export function useFeeRecords() {
       const next = prev.map(x => x.id === id ? { ...x, ...patch } : x)
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
-  const remove = useCallback(id => {
+  const remove = useCallback((id) => {
     setItems(prev => {
       const next = prev.filter(x => x.id !== id)
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
-  const clearAll = useCallback(() => { setItems([]); save([]) }, [])
+  const clearAll = useCallback(() => {
+    setItems([]); save([])
+    try { localStorage.setItem(CLEARED_KEY, '1') } catch { /* ignore */ }
+    setIsSeed(false)
+  }, [])
 
-  return { items, setAll, add, addMany, update, remove, clearAll }
+  const reseed = useCallback(() => {
+    setItems(DEMO_FEE_RECORDS); save(DEMO_FEE_RECORDS)
+    try { localStorage.removeItem(CLEARED_KEY) } catch { /* ignore */ }
+    setIsSeed(true)
+  }, [])
+
+  return { items, isSeed, setAll, add, addMany, update, remove, clearAll, reseed }
 }

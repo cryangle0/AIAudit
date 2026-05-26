@@ -211,3 +211,149 @@ export const DEMO_ALLOCATION = {
     ]
   }
 }
+
+
+// ============================================================================
+// 商品资料 - 种子数据（localStorage 为空时首次加载使用）
+// ============================================================================
+export const DEMO_PRODUCT_MASTER = [
+  { styleCode: 'X2501326322FXT', productCode: 'I568150018164', productName: '冬款保暖羽绒服', category: '童装外套', memo: '主推款' },
+  { styleCode: 'X2501326322FXT', productCode: 'I568150018600', productName: '冬款保暖羽绒服', category: '童装外套', memo: '主推款' },
+  { styleCode: 'X2501326322FXT', productCode: 'I568150018700', productName: '冬款保暖羽绒服', category: '童装外套', memo: '主推款' },
+  { styleCode: 'X2509329934FXT', productCode: 'I687014417827', productName: '春秋款卫衣', category: '童装卫衣', memo: '' },
+  { styleCode: 'X2509329934FXT', productCode: 'I687051663823', productName: '春秋款卫衣', category: '童装卫衣', memo: '' },
+  { styleCode: 'X250138238FXT', productCode: 'H626415547402', productName: '童装连衣裙', category: '童装连衣裙', memo: '' },
+  { styleCode: 'X250138238FXT', productCode: 'H626414417140', productName: '童装连衣裙', category: '童装连衣裙', memo: '' },
+  { styleCode: 'X2501324376FXT', productCode: 'I180814417600', productName: '童装毛衣', category: '童装毛衣', memo: '' },
+  { styleCode: 'X250138648FXT', productCode: 'H598714417302', productName: '童装牛仔裤', category: '童装裤子', memo: '' },
+  { styleCode: 'X401410108FXT', productCode: 'G082114417302', productName: '童装运动套装', category: '童装套装', memo: '' }
+]
+
+// ============================================================================
+// 商品成本 - 种子数据（包含 2026-01 与 2025-12 两个期间，演示「成本变更只影响后续」）
+// ============================================================================
+export const DEMO_PRODUCT_COST = [
+  // 2026-01
+  { period: '2026-01', styleCode: 'X2501326322FXT', productCode: 'I568150018164', productName: '冬款保暖羽绒服', baseCost: 86.70, tagFee: 4, accessoryFee: 1.5 },
+  { period: '2026-01', styleCode: 'X2509329934FXT', productCode: 'I687014417827', productName: '春秋款卫衣', baseCost: 29.90, tagFee: 2, accessoryFee: 0.5 },
+  { period: '2026-01', styleCode: 'X250138238FXT', productCode: 'H626415547402', productName: '童装连衣裙', baseCost: 105.30, tagFee: 4, accessoryFee: 1 },
+  { period: '2026-01', styleCode: 'X2501324376FXT', productCode: 'I180814417600', productName: '童装毛衣', baseCost: 76.00, tagFee: 3, accessoryFee: 1 },
+  { period: '2026-01', styleCode: 'X250138648FXT', productCode: 'H598714417302', productName: '童装牛仔裤', baseCost: 85.50, tagFee: 3, accessoryFee: 1 },
+  // 2025-12（旧成本，演示成本变更）
+  { period: '2025-12', styleCode: 'X2501326322FXT', productCode: 'I568150018164', productName: '冬款保暖羽绒服', baseCost: 80.00, tagFee: 3.5, accessoryFee: 1.5 },
+  { period: '2025-12', styleCode: 'X2509329934FXT', productCode: 'I687014417827', productName: '春秋款卫衣', baseCost: 28.50, tagFee: 2, accessoryFee: 0.5 }
+]
+
+// ============================================================================
+// 成本修改记录 - 种子数据
+// ============================================================================
+const NOW = Date.now()
+const DAY = 86400000
+export const DEMO_COST_HISTORY = [
+  { id: 'log_demo_5', timestamp: NOW - 1 * DAY,  operator: '财务-王芳', action: 'update', period: '2026-01',
+    styleCode: 'X2501326322FXT', productCode: 'I568150018164', field: '商品成本', oldValue: 80.00, newValue: 86.70 },
+  { id: 'log_demo_4', timestamp: NOW - 2 * DAY,  operator: '财务-王芳', action: 'create', period: '2026-01',
+    styleCode: 'X250138648FXT', productCode: 'H598714417302', field: '总成本', oldValue: 0, newValue: 89.50 },
+  { id: 'log_demo_3', timestamp: NOW - 5 * DAY,  operator: '财务-王芳', action: 'import', period: '',
+    styleCode: '', productCode: '', field: '批量', oldValue: 0, newValue: 156 },
+  { id: 'log_demo_2', timestamp: NOW - 12 * DAY, operator: '运营-李明', action: 'update', period: '2025-12',
+    styleCode: 'X2509329934FXT', productCode: 'I687014417827', field: '标费', oldValue: 1.5, newValue: 2 },
+  { id: 'log_demo_1', timestamp: NOW - 18 * DAY, operator: '管理员',   action: 'create', period: '2025-12',
+    styleCode: 'X2501326322FXT', productCode: 'I568150018164', field: '总成本', oldValue: 0, newValue: 85 }
+]
+
+// ============================================================================
+// 数据归集 - 种子费用记录
+// ============================================================================
+export const DEMO_FEE_RECORDS = [
+  { id: 'fee_demo_1', period: '2026-01', feeType: '推广费', org: 'default', platformId: 'douyin', shopId: 'xzf-dehuang',
+    platformOrderId: '', amount: 12500, date: '2026-01-15', memo: '巨量引擎信息流投放', createdAt: NOW - 10 * DAY },
+  { id: 'fee_demo_2', period: '2026-01', feeType: '运费险', org: 'default', platformId: 'douyin', shopId: 'xzf-dehuang',
+    platformOrderId: '', amount: 2800, date: '2026-01-31', memo: '本月运费险扣费', createdAt: NOW - 8 * DAY },
+  { id: 'fee_demo_3', period: '2026-01', feeType: '红包', org: 'default', platformId: 'douyin', shopId: 'xzf-dehuang',
+    platformOrderId: '', amount: 4200, date: '2026-01-20', memo: '直播间红包活动', createdAt: NOW - 7 * DAY },
+  { id: 'fee_demo_4', period: '2026-01', feeType: '快递费', org: 'default', platformId: 'douyin', shopId: 'xzf-dehuang',
+    platformOrderId: '', amount: 8650, date: '2026-01-31', memo: '中通月结', createdAt: NOW - 6 * DAY },
+  { id: 'fee_demo_5', period: '2026-01', feeType: '保险费', org: 'default', platformId: 'douyin', shopId: 'xzf-dehuang',
+    platformOrderId: '', amount: 580, date: '2026-01-05', memo: '商品险', createdAt: NOW - 25 * DAY }
+]
+
+// ============================================================================
+// 店铺/平台配置 - 种子数据
+// ============================================================================
+export const DEMO_SHOP_PROFILES = [
+  { id: 'shop_demo_1', name: '雪中飞德煌童装专卖店', platformId: 'douyin', currency: 'CNY',
+    status: 'active', settlementRule: 'T+1 自动结算，平台手续费 5%', memo: '抖音真实店铺', createdAt: NOW - 30 * DAY },
+  { id: 'shop_demo_2', name: '雪中飞天猫旗舰店', platformId: 'taobao', currency: 'CNY',
+    status: 'active', settlementRule: 'T+15 半月结', memo: '主营冬款外套', createdAt: NOW - 60 * DAY },
+  { id: 'shop_demo_3', name: 'OZON 童装旗舰店', platformId: 'ozon', currency: 'RUB',
+    status: 'active', settlementRule: 'T+30 月结，跨境收款手续费 1.2%', memo: '俄罗斯主推', createdAt: NOW - 45 * DAY },
+  { id: 'shop_demo_4', name: 'Amazon US 童装店', platformId: 'amazon_us', currency: 'USD',
+    status: 'active', settlementRule: 'T+14 双周结', memo: '美国市场', createdAt: NOW - 25 * DAY },
+  { id: 'shop_demo_5', name: '老款临时仓店铺', platformId: 'pinduoduo', currency: 'CNY',
+    status: 'inactive', settlementRule: '', memo: '清仓后停用', createdAt: NOW - 90 * DAY }
+]
+
+
+// ============================================================================
+// 差异分析表 - 演示对账结果（用于未上传账单时的展示）
+// ============================================================================
+export const DEMO_RECONCILE_RESULT = {
+  kpi: {
+    totalOrders: 2541,
+    revenue: 438770.18,
+    cost: 220014.28,
+    realProfit: 196545.41,
+    systemProfit: 218755.90,
+    diffCount: 192,
+    duplicatedCount: 73,
+    missingCount: 54,
+    anomalyCount: 65,
+    customCostCount: 0
+  },
+  diffRows: [
+    { orderId: '6950156655091651754', styleCode: 'X2501326322FXT', productCode: 'I568150018164',
+      productName: '冬款保暖羽绒服', qty: 1, saleRevenue: 179.00, netSettled: 170.05,
+      shippedCost: 86.70, costSource: 'jushuitan', realProfit: 83.35, systemProfit: 92.30,
+      profitDiff: -8.95, bucket: 'matched',
+      aiHint: '', jstBillAmountSum: 179.00, platformFlows: [], jstRows: [] },
+    { orderId: '6950144136995607613', styleCode: 'X2509329934FXT', productCode: 'I687014417827',
+      productName: '春秋款卫衣', qty: 1, saleRevenue: 69.90, netSettled: 66.40,
+      shippedCost: 0, costSource: 'jushuitan', realProfit: 66.40, systemProfit: 29.90,
+      profitDiff: 36.50, bucket: 'profit_anomaly',
+      aiHint: '毛利偏离系统记录 ¥36.50，请核对成本价或退款金额',
+      jstBillAmountSum: 69.90, platformFlows: [], jstRows: [] },
+    { orderId: '6923805849049201907', styleCode: 'X250138238FXT', productCode: 'H626415547402',
+      productName: '童装连衣裙', qty: 1, saleRevenue: 199.00, netSettled: 189.05,
+      shippedCost: 105.30, costSource: 'jushuitan', realProfit: 83.75, systemProfit: 93.70,
+      profitDiff: -9.95, bucket: 'matched',
+      aiHint: '', jstBillAmountSum: 199.00, platformFlows: [], jstRows: [] },
+    { orderId: '6924339045381930971', styleCode: 'X2501324376FXT', productCode: 'I180814417600',
+      productName: '童装毛衣', qty: 1, saleRevenue: 179.00, netSettled: 170.05,
+      shippedCost: 162.70, costSource: 'jushuitan', realProfit: 7.35, systemProfit: 298.30,
+      profitDiff: -290.95, bucket: 'duplicated',
+      aiHint: '聚水潭同订单多行（售后/换货）金额累计为平台的 3 倍',
+      jstBillAmountSum: 537.00, platformFlows: [], jstRows: [] },
+    { orderId: '6950156878352356395', styleCode: null, productCode: null,
+      productName: null, qty: 0, saleRevenue: 0, netSettled: 0,
+      shippedCost: 0, costSource: 'jushuitan', realProfit: 0, systemProfit: 0,
+      profitDiff: 0, bucket: 'missing_in_jst',
+      aiHint: '平台有此单，聚水潭未导出', jstBillAmountSum: 0, platformFlows: [], jstRows: [] },
+    { orderId: 'JST_5113153766063040445', styleCode: 'X2501122980FXT', productCode: 'I997450918302',
+      productName: '基础款外套', qty: 0, saleRevenue: 0, netSettled: 0,
+      shippedCost: 400, costSource: 'jushuitan', realProfit: -400, systemProfit: 400,
+      profitDiff: -800, bucket: 'missing_in_platform',
+      aiHint: '聚水潭有此单，平台账单未结算', jstBillAmountSum: 0, platformFlows: [], jstRows: [] }
+  ],
+  skuStats: [
+    { styleCode: 'X2501326322FXT', productName: '冬款保暖羽绒服', qty: 280, revenue: 50120, cost: 24276, profit: 25844, profitRate: 0.516 },
+    { styleCode: 'X2509329934FXT', productName: '春秋款卫衣', qty: 156, revenue: 10920, cost: 4680, profit: 6240, profitRate: 0.571 },
+    { styleCode: 'X250138238FXT',  productName: '童装连衣裙', qty: 89, revenue: 17711, cost: 9372, profit: 8339, profitRate: 0.471 },
+    { styleCode: 'X2501324376FXT', productName: '童装毛衣', qty: 67, revenue: 11993, cost: 5159, profit: 6834, profitRate: 0.570 }
+  ],
+  monthlyExpense: [
+    { scene: '权益保险', count: 28, totalAmount: -2350.00, samples: [{ time: '2026-01-15', amount: 84, memo: '保险扣费' }] },
+    { scene: '提现手续费', count: 4, totalAmount: -180.00, samples: [{ time: '2026-01-31', amount: 45, memo: '提现' }] },
+    { scene: '推广费', count: 12, totalAmount: -3500.00, samples: [{ time: '2026-01-20', amount: 500, memo: '巨量引擎' }] }
+  ]
+}

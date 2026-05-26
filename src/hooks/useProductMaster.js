@@ -1,17 +1,31 @@
 // 商品资料 — 需求 #1
-// MasterRecord: { styleCode, productCode, productName, category, memo, createdAt, updatedAt }
+// 首次访问（无数据且未显式清空）使用种子数据，isSeed=true 提醒用户
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { DEMO_PRODUCT_MASTER } from '../core/demoData.js'
 
 const STORAGE_KEY = 'ai-reconcile.productMaster'
+const CLEARED_KEY = 'ai-reconcile.productMaster.cleared'
 
-function load() {
+function buildSeed() {
+  const t = Date.now()
+  return DEMO_PRODUCT_MASTER.map(x => ({ ...x, createdAt: t, updatedAt: t }))
+}
+
+function loadInitial() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const arr = JSON.parse(raw)
-    return Array.isArray(arr) ? arr : []
-  } catch { return [] }
+    if (raw) {
+      const arr = JSON.parse(raw)
+      return { items: Array.isArray(arr) ? arr : [], isSeed: false }
+    }
+    if (!localStorage.getItem(CLEARED_KEY)) {
+      const seeded = buildSeed()
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded))
+      return { items: seeded, isSeed: true }
+    }
+    return { items: [], isSeed: false }
+  } catch { return { items: [], isSeed: false } }
 }
 
 function save(arr) {
@@ -19,7 +33,9 @@ function save(arr) {
 }
 
 export function useProductMaster() {
-  const [items, setItems] = useState(load)
+  const initial = loadInitial()
+  const [items, setItems] = useState(initial.items)
+  const [isSeed, setIsSeed] = useState(initial.isSeed)
 
   const addOrUpdate = useCallback((rec) => {
     setItems(prev => {
@@ -30,6 +46,7 @@ export function useProductMaster() {
       const next = idx >= 0 ? prev.map((x, i) => i === idx ? stamped : x) : [...prev, stamped]
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
   const addMany = useCallback((records) => {
@@ -42,6 +59,7 @@ export function useProductMaster() {
       const next = Array.from(map.values())
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
   const remove = useCallback((rec) => {
@@ -49,9 +67,22 @@ export function useProductMaster() {
       const next = prev.filter(x => !(x.styleCode === rec.styleCode && x.productCode === rec.productCode))
       save(next); return next
     })
+    setIsSeed(false)
   }, [])
 
-  const clearAll = useCallback(() => { setItems([]); save([]) }, [])
+  const clearAll = useCallback(() => {
+    setItems([])
+    save([])
+    try { localStorage.setItem(CLEARED_KEY, '1') } catch { /* ignore */ }
+    setIsSeed(false)
+  }, [])
 
-  return { items, addOrUpdate, addMany, remove, clearAll }
+  const reseed = useCallback(() => {
+    const seeded = buildSeed()
+    setItems(seeded); save(seeded)
+    try { localStorage.removeItem(CLEARED_KEY) } catch { /* ignore */ }
+    setIsSeed(true)
+  }, [])
+
+  return { items, isSeed, addOrUpdate, addMany, remove, clearAll, reseed }
 }
